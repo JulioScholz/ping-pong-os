@@ -11,19 +11,37 @@
 void queue_append (queue_t **queue, queue_t *elem) {
 
     if (queue == NULL){
-        printf("A fila não existe\n");
+        printf("Error on queue_append: Fila nao existe!\n");
         return;
     }
     if(elem == NULL){
-        printf("O elemento não existe!\n");
+        printf("Error on queue_append: Elemento nao existe! \n");
         return;
     }
     if (elem->prev !=NULL || elem->prev != NULL){
-        printf("O elemento possui ligação em outra fila! \n");
+        printf("Error on queue_append: O elemento possui ligacao em outra fila! \n");
         return;
     }
-    
-    //first_elem
+
+    //inserção de um elemento em uma fila circular fazia
+    if(*queue == NULL){
+        *queue = elem;
+        elem->next = elem;
+        elem->prev =elem;
+    }
+    //se a fila nao está vazia insere o elemento ao final da fila existente.
+    else{
+        //queue_t *ultimo_elemento = NULL;
+        //ultimo_elemento = (*queue)->prev;
+
+        elem->prev = (*queue)->prev; // onovo ultimo elemento tem como anterior o antigo ultimo elemento
+        (*queue)->prev->next = elem; // o antigo ultimo elemento recebe como proximo o novo ultimo elemento
+        elem->next = *queue;    //fila circular, ou seja o proximo ao ultimo elemento é o primeiro elemento
+        (*queue)->prev = elem;  //o mesmo aqui, o anterior ao primeiro elemento é o novo ultimo elemento
+    }
+
+    return;
+
 }
 
 //------------------------------------------------------------------------------
@@ -35,13 +53,67 @@ void queue_append (queue_t **queue, queue_t *elem) {
 // - o elemento deve pertencer a fila indicada
 // Retorno: apontador para o elemento removido, ou NULL se erro
 
-queue_t *queue_remove (queue_t **queue, queue_t *elem) ;
+queue_t *queue_remove (queue_t **queue, queue_t *elem) {
+    if (queue == NULL){
+        printf("Error on queue_remove: Fila nao existe!\n");
+        return NULL;
+    }
+    if(*queue == NULL){
+        printf("Error on queue_remove: Fila esta vazia!\n");
+        return NULL;
+    }
+    if(elem == NULL){
+        printf("Error on queue_remove: Elemento nao existe! \n");
+        return NULL;
+    }
+    
+    queue_t *auxiliar = NULL;
+    auxiliar = (*queue)->next;
+
+    while(auxiliar != elem){ 
+
+        if(auxiliar == (*queue)){ //se chegou ao inicio da fila é poque o elemento nao foi encontrado
+            printf("Error on queue_remove: O elemento não se encontra na fila!\n");
+            auxiliar = NULL;
+            return NULL;
+        }
+        auxiliar = auxiliar->next;
+    }
+
+    auxiliar = NULL;
+
+    
+
+    //necessário verificar se a fila contem somente um elemento
+    //caso positivo é necessário um tratamento diferete
+
+    if((*queue) == elem && (*queue)->prev == elem && (*queue)->next == elem){
+        elem->prev = NULL;
+        elem->next = NULL;
+        (*queue)   = NULL;
+        return elem;
+    }
+
+    //reajuste da fila 
+    (elem->prev)->next = elem->next;
+    (elem->next)->prev = elem->prev;
+
+    //desligamento do elemento da fila
+    elem->next = NULL;
+    elem->prev = NULL;
+
+    return elem;
+}
 
 //------------------------------------------------------------------------------
 // Conta o numero de elementos na fila
 // Retorno: numero de elementos na fila
 
-int queue_size (queue_t *queue) ;
+int queue_size (queue_t *queue) {
+
+    
+    return 100;
+}
 
 //------------------------------------------------------------------------------
 // Percorre a fila e imprime na tela seu conteúdo. A impressão de cada
@@ -50,4 +122,6 @@ int queue_size (queue_t *queue) ;
 //
 // void print_elem (void *ptr) ; // ptr aponta para o elemento a imprimir
 
-void queue_print (char *name, queue_t *queue, void print_elem (void*) ) ;
+void queue_print (char *name, queue_t *queue, void print_elem (void*) ) {
+    return;
+}
