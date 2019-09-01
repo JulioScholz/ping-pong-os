@@ -1,3 +1,11 @@
+/*
+Aluno: Júlio César Werner Scholz
+RA: 2023890
+Data de inicio: 31/08/2019
+Data de término 01/09/2019
+
+*/
+
 #include "queue.h"
 #include <stdio.h>
 
@@ -94,7 +102,13 @@ queue_t *queue_remove (queue_t **queue, queue_t *elem) {
         return elem;
     }
 
-    //reajuste da fila 
+    
+    //reajuste da fila, caso o elemento a ser removido seja o primeiro na fila 
+    if ((*queue) == elem) {
+        (*queue) = elem->next;
+    }
+
+    // "juntando" a fila, que será repartida com a remoção de um elemento
     (elem->prev)->next = elem->next;
     (elem->next)->prev = elem->prev;
 
@@ -111,8 +125,21 @@ queue_t *queue_remove (queue_t **queue, queue_t *elem) {
 
 int queue_size (queue_t *queue) {
 
-    
-    return 100;
+    if( queue == NULL){
+        return 0;
+    }
+
+    int size = 1;
+    queue_t* auxiliar = NULL;
+    auxiliar = queue->next;
+
+    while (auxiliar != queue){
+        size = size + 1;
+        auxiliar = auxiliar->next;
+    }
+    auxiliar = NULL;
+
+    return size;
 }
 
 //------------------------------------------------------------------------------
@@ -123,5 +150,23 @@ int queue_size (queue_t *queue) {
 // void print_elem (void *ptr) ; // ptr aponta para o elemento a imprimir
 
 void queue_print (char *name, queue_t *queue, void print_elem (void*) ) {
+    printf("%s [",name);
+    
+    if(queue == NULL){
+        printf("]\n");
+        return;
+    }
+    queue_t *auxiliar = NULL;
+    auxiliar = queue;
+
+    while(auxiliar != queue->prev){
+        print_elem(auxiliar);
+        printf(" ");
+        auxiliar = auxiliar->next;
+    }
+    print_elem(auxiliar);
+
+    printf("]\n");
+
     return;
 }
