@@ -15,8 +15,10 @@ Professor: Marco Aurélio Wehrmeister
 task_t  *task_current, task_main;
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 
-
+// Inicializa o sistema operacional; deve ser chamada no inicio do main()
 void pingpong_init () {
+
+    //desativação do buffer da saida padrao (stdout), usado pela função printf
     setvbuf (stdout, 0, _IONBF, 0) ;
 
     // Tarefa main possui id 0
@@ -38,6 +40,7 @@ void pingpong_init () {
     #endif
 }
 
+// Cria uma nova tarefa. Retorna um ID> 0 ou erro.
 int task_create (task_t *task, void (*start_func)(void *), void *arg){
 
     char *stack = NULL ;
@@ -88,13 +91,15 @@ int task_switch (task_t *task){
         printf("Error on task_switch: A tarefa é nula! \n");
         return -1;
     }
-
+    // ponteiro auxiliar que indica a tarefa anterior.
     task_previous = task_current;
+    // a tarefa corrente passa a ser a nova tarefa recebida.
     task_current = task;
 
     #ifdef DEBUG
     printf ("task_switch: trocando contexto %d -> %d\n", task_previous->t_id, task->t_id) ;
     #endif 
+    // troca de contextos
     if (swapcontext (&(task_previous->context), &(task->context)) < 0) {
         printf ("Error on task_switch: Troca de Contexto falhou! \n");
         return -1;
