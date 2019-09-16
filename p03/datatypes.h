@@ -15,7 +15,9 @@ typedef struct task_t
   struct task_t *prev ;
   struct task_t *next ;
   struct task_t *main ;
+  struct task_t** queue;
 
+	char state;
   int t_id ;              //Inteiro para identificação da tarefa
   ucontext_t context;
   

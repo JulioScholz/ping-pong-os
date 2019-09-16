@@ -8,13 +8,14 @@ Professor: Marco Aurélio Wehrmeister
 */
 
 #include "pingpong.h"
-#include <stdio.h>
-#include <stdlib.h>
 
-#define STACKSIZE 32768	
 
-task_t  *task_current, task_main;
+task_t *task_current, task_main, task_dispacther;
+task_t *queue_ready;    
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
+
+void bodyDispatcher(void* arg); 
+task_t* scheduler();
 
 // Inicializa o sistema operacional; deve ser chamada no inicio do main()
 void pingpong_init () {
@@ -25,6 +26,7 @@ void pingpong_init () {
     // Tarefa main possui id 0
     task_main.t_id = 0;
     count_id = 1;
+    task_main.state = READY;
 
     //Inicialização do encademanto das tarefas
     task_main.prev = NULL;
@@ -122,4 +124,45 @@ int task_id (){
     printf ("task_id: ID da tarefa %d\n", task_current->t_id) ;
     #endif 
     return (task_current->t_id);
+}
+
+void dispatcher_body (void *arg) // dispatcher é uma tarefa
+{
+    task_t *task_next;
+    task_next = NULL;
+
+    while ( sizeof((queue_t*)queue_ready) >=  1 )
+        {
+        task_next = scheduler() ; // scheduler é uma função
+        if (task_next){
+             // Remoção a proxima tarefa a ser executa da fila de prontos.por meio do casting para queue_t
+            queue_remove((queue_t**)&queue_ready,(queue_t*)task_next);
+          //  ... // ações antes de lançar a tarefa "next", se houverem
+            task_switch (task_next) ; // transfere controle para a tarefa "next"
+           // ... // ações após retornar da tarefa "next", se houverem
+        }
+    }
+    task_exit(0) ; // encerra a tarefa dispatcher
+}
+
+// suspende uma tarefa, retirando-a de sua fila atual, adicionando-a à fila
+// queue e mudando seu estado para "suspensa"; usa a tarefa atual se task==NULL
+void task_suspend (task_t *task, task_t **queue){
+    if(task == NULL){
+
+    }
+}
+
+// acorda uma tarefa, retirando-a de sua fila atual, adicionando-a à fila de
+// tarefas prontas ("ready queue") e mudando seu estado para "pronta"
+void task_resume (task_t *task){
+
+}
+
+// operações de escalonamento ==================================================
+
+// libera o processador para a próxima tarefa, retornando à fila de tarefas
+// prontas ("ready queue")
+void task_yield () {
+
 }

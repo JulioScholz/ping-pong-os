@@ -9,7 +9,19 @@
 
 #define _XOPEN_SOURCE 600	// para evitar erros POSIX no MacOS X
 
+#define STACKSIZE 32768	
+
+#define SUSPENDED 's'
+#define READY 'r'
+#define FINALIZED 'f'
+#define IS_RUNNIG 'i'
+
+
 #include "datatypes.h"		// estruturas de dados necessárias
+#include "queue.h"
+#include <stdio.h>
+#include <stdlib.h>
+
 
 // funções gerais ==============================================================
 
