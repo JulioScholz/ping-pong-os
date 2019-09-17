@@ -9,7 +9,6 @@ Professor: Marco Aurélio Wehrmeister
 
 #include "pingpong.h"
 
-
 task_t *task_current, task_main, task_dispacther;
 task_t *queue_ready, *queue_suspended;    
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
@@ -136,9 +135,13 @@ int task_id (){
     return (task_current->t_id);
 }
 
+// FCFS -> first come, first served 
 task_t *scheduler(){
-
-    return NULL;
+    
+    task_t *task_aux =NULL;
+    //remove o primeiro elemento da fila de prontos
+    task_aux = queue_ready;
+    return task_aux;
 }
 
 void dispatcher_body (void *arg) // dispatcher é uma tarefa
