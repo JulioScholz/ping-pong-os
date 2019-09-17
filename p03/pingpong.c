@@ -37,8 +37,8 @@ void pingpong_init () {
 
     // criação da tarefa dispatcher
     task_create(&task_dispacther,(void*)(dispatcher_body), NULL); // <- não sei se NULL é o correto aqui
-
-
+    queue_remove((queue_t**)&queue_ready, (queue_t*)&task_dispacther);
+    
     // A tarefa em execução é a main
     task_current = &task_main;
 
@@ -124,7 +124,14 @@ void task_exit (int exitCode) {
     #ifdef DEBUG
     printf ("task_exit: tarefa %d sendo encerrada\n", task_current->t_id) ;
     #endif  
-	task_switch(&task_main);
+    //Se a tarefa corrente que está pra sair não for o dispatcher, o dispacther assume
+    if (task_current != &task_dispacther) {
+        task_switch(&task_dispacther);
+    }
+    // Se o dispatcher for sair, o controle passa para a main
+    else {
+        task_switch(&task_main);
+    }
 }
 
 // retorna o identificador da tarefa corrente (main é 0)
@@ -138,8 +145,8 @@ int task_id (){
 // FCFS -> first come, first served 
 task_t *scheduler(){
     
-    task_t *task_aux =NULL;
-    //remove o primeiro elemento da fila de prontos
+    task_t *task_aux = NULL;
+    //O primeiro elemento da fila de prontos é escolhido pelo scheduler
     task_aux = queue_ready;
     return task_aux;
 }
@@ -151,13 +158,13 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 
     // Enquanto houverem tarefas prontas para serem executadas o loop continua
     while ( sizeof((queue_t*)queue_ready) >=  1 )
-        {
+    {
         // a funçao scheduler decide qual a procima tarefa a ser executada
         task_next = scheduler() ; // scheduler é uma função
         if (task_next != NULL){
 
             // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
-            queue_remove((queue_t**)&queue_ready,(queue_t*)task_next);
+            task_next = (task_t*)queue_remove((queue_t**)&queue_ready,(queue_t*)task_next);
            
             // a tarafa next é lançada  
             task_switch (task_next) ; // transfere controle para a tarefa "next"
@@ -182,31 +189,41 @@ void task_suspend (task_t *task, task_t **queue){
     // Remoção da tarefa indicada da fila de prontos
 
     //REMOVE DA QUEUE_READY?
-    aux = queue_remove((queue_t**)(&queue_ready),(queue_t*)(task));
-    // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
-    if(aux == NULL){
-        printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
+    if(queue != NULL){
+        aux = queue_remove((queue_t**)(&queue_ready),(queue_t*)(task));
+        // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
+        if(aux == NULL){
+            printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
+        }
+        else{
+            // Mudança de estado para suspenso
+            task->state = SUSPENDED;
+            // Inclusão da tarefa na fila de suspensos
+            queue_append((queue_t**)(&queue),(queue_t*)(task));
+        }
     }
-    else{
-        // Mudança de estado para suspenso
-        task->state = SUSPENDED;
-        // Inclusão da tarefa na fila de suspensos
-        queue_append((queue_t**)(&queue),(queue_t*)(task));
-    }
-    
 
 }
 
 // acorda uma tarefa, retirando-a de sua fila atual, adicionando-a à fila de
 // tarefas prontas ("ready queue") e mudando seu estado para "pronta"
 void task_resume (task_t *task){
-
+    task_t* task_aux = NULL;
+    task_aux = (task_t*)queue_remove((queue_t**)(&queue_suspended),(queue_t*)(&task));
+    task_aux->state = READY;
+    queue_append((queue_t**)(&queue_ready),(queue_t*)(&task_aux));
 }
 
-// operações de escalonamento ==================================================
 
 // libera o processador para a próxima tarefa, retornando à fila de tarefas
 // prontas ("ready queue")
 void task_yield () {
+
+    if (task_current->t_id != 0) {
+        queue_append((queue_t**)(&queue_ready), (queue_t*)(&task_current));
+        task_current->state = READY;
+    }
+    // Dispatcher assumeo controle
+    task_switch(&task_dispacther);
 
 }
