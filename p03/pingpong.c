@@ -177,6 +177,8 @@ void task_suspend (task_t *task, task_t **queue){
         task = task_current;
     }
     // Remoção da tarefa indicada da fila de prontos
+
+    //REMOVE DA QUEUE_READY?
     aux = queue_remove((queue_t**)(&queue_ready),(queue_t*)(task));
     // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
     if(aux == NULL){
