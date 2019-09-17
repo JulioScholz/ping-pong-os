@@ -11,10 +11,10 @@ Professor: Marco Aurélio Wehrmeister
 
 
 task_t *task_current, task_main, task_dispacther;
-task_t *queue_ready;    
+task_t *queue_ready, *queue_suspended;    
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 
-void bodyDispatcher(void* arg); 
+void dispatcher_body(void* arg); 
 task_t* scheduler();
 
 // Inicializa o sistema operacional; deve ser chamada no inicio do main()
@@ -32,8 +32,13 @@ void pingpong_init () {
     task_main.prev = NULL;
     task_main.next = NULL;
 
-    //Refreência a si mesmo
+    // Referência a si mesmo
     task_main.main = &task_main;
+
+
+    // criação da tarefa dispatcher
+    task_create(&task_dispacther,(void*)(dispatcher_body), NULL); // <- não sei se NULL é o correto aqui
+
 
     // A tarefa em execução é a main
     task_current = &task_main;
@@ -78,6 +83,10 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     // O contador é incrementado para que futuras tarefas possam utiliza-lo
     count_id = count_id + 1;
 
+    //A criaçao da tarefa terminou, seu estado passa a ser READY ('r')
+    task->state = READY;
+    queue_append((queue_t**)(queue_ready),(queue_t*) (task));
+
     #ifdef DEBUG
 	printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
     #endif
@@ -96,6 +105,7 @@ int task_switch (task_t *task){
     }
     // ponteiro auxiliar que indica a tarefa anterior.
     task_previous = task_current;
+  //  task_previous.state
     // a tarefa corrente passa a ser a nova tarefa recebida.
     task_current = task;
 
@@ -126,31 +136,60 @@ int task_id (){
     return (task_current->t_id);
 }
 
+task_t *scheduler(){
+
+    return NULL;
+}
+
 void dispatcher_body (void *arg) // dispatcher é uma tarefa
 {
     task_t *task_next;
     task_next = NULL;
 
+    // Enquanto houverem tarefas prontas para serem executadas o loop continua
     while ( sizeof((queue_t*)queue_ready) >=  1 )
         {
+        // a funçao scheduler decide qual a procima tarefa a ser executada
         task_next = scheduler() ; // scheduler é uma função
-        if (task_next){
-             // Remoção a proxima tarefa a ser executa da fila de prontos.por meio do casting para queue_t
+        if (task_next != NULL){
+
+            // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
             queue_remove((queue_t**)&queue_ready,(queue_t*)task_next);
-          //  ... // ações antes de lançar a tarefa "next", se houverem
+           
+            // a tarafa next é lançada  
             task_switch (task_next) ; // transfere controle para a tarefa "next"
-           // ... // ações após retornar da tarefa "next", se houverem
+
+            // ... // ações após retornar da tarefa "next", se houverem
+            // não se se precisa de algo aqui
         }
     }
     task_exit(0) ; // encerra a tarefa dispatcher
 }
 
+
+
 // suspende uma tarefa, retirando-a de sua fila atual, adicionando-a à fila
 // queue e mudando seu estado para "suspensa"; usa a tarefa atual se task==NULL
 void task_suspend (task_t *task, task_t **queue){
-    if(task == NULL){
+    queue_t *aux = NULL;
 
+    if(task == NULL){
+        task = task_current;
     }
+    // Remoção da tarefa indicada da fila de prontos
+    aux = queue_remove((queue_t**)(queue_ready),(queue_t*)(task));
+    // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
+    if(aux == NULL){
+        printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
+    }
+    else{
+        // Mudança de estado para suspenso
+        task->state = SUSPENDED;
+        // Inclusão da tarefa na fila de suspensos
+        queue_append((queue_t**)(queue),(queue_t*)(task));
+    }
+    
+
 }
 
 // acorda uma tarefa, retirando-a de sua fila atual, adicionando-a à fila de
