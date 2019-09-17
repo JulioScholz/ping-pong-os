@@ -85,7 +85,7 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
 
     //A criaçao da tarefa terminou, seu estado passa a ser READY ('r')
     task->state = READY;
-    queue_append((queue_t**)(queue_ready),(queue_t*) (task));
+    queue_append((queue_t**)(&queue_ready),(queue_t*) (task));
 
     #ifdef DEBUG
 	printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
@@ -177,7 +177,7 @@ void task_suspend (task_t *task, task_t **queue){
         task = task_current;
     }
     // Remoção da tarefa indicada da fila de prontos
-    aux = queue_remove((queue_t**)(queue_ready),(queue_t*)(task));
+    aux = queue_remove((queue_t**)(&queue_ready),(queue_t*)(task));
     // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
     if(aux == NULL){
         printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
@@ -186,7 +186,7 @@ void task_suspend (task_t *task, task_t **queue){
         // Mudança de estado para suspenso
         task->state = SUSPENDED;
         // Inclusão da tarefa na fila de suspensos
-        queue_append((queue_t**)(queue),(queue_t*)(task));
+        queue_append((queue_t**)(&queue),(queue_t*)(task));
     }
     
 
