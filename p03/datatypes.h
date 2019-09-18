@@ -15,6 +15,7 @@ typedef struct task_t
   struct task_t *prev ;
   struct task_t *next ;
   struct task_t *main ;
+  struct queue_t **ptr_queue; //referência para  a fila em que a tarefa está inserida
  	char state;
   int t_id ;              //Inteiro para identificação da tarefa
   ucontext_t context;

@@ -10,7 +10,7 @@ Professor: Marco Aurélio Wehrmeister
 #include "pingpong.h"
 
 task_t *task_current, task_main, task_dispacther;
-task_t *queue_ready, *queue_suspended;    
+task_t *queue_ready;    
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 
 void dispatcher_body(void* arg); 
@@ -36,8 +36,7 @@ void pingpong_init () {
 
 
     // criação da tarefa dispatcher
-    task_create(&task_dispacther,(void*)(dispatcher_body), NULL); // <- não sei se NULL é o correto aqui
-    queue_remove((queue_t**)&queue_ready, (queue_t*)&task_dispacther);
+    task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); // <- não sei se NULL é o correto aqui
     
     // A tarefa em execução é a main
     task_current = &task_main;
@@ -84,8 +83,11 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
 
     //A criaçao da tarefa terminou, seu estado passa a ser READY ('r')
     task->state = READY;
-    queue_append((queue_t**)(&queue_ready),(queue_t*) (task));
 
+    if( task->t_id > 1){
+        queue_append((queue_t**)(&queue_ready),(queue_t*) (task));
+        task->ptr_queue = (queue_t**)(&queue_ready);
+    }
     #ifdef DEBUG
 	printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
     #endif
@@ -126,6 +128,7 @@ void task_exit (int exitCode) {
     #endif  
     //Se a tarefa corrente que está pra sair não for o dispatcher, o dispacther assume
     if (task_current != &task_dispacther) {
+        queue_remove((queue_t**)(&queue_ready), (queue_t*)(task_current));
         task_switch(&task_dispacther);
     }
     // Se o dispatcher for sair, o controle passa para a main
@@ -153,29 +156,45 @@ task_t *scheduler(){
 
 void dispatcher_body (void *arg) // dispatcher é uma tarefa
 {
-    task_t *task_next;
-    task_next = NULL;
-
+    printf("\nentrou dispacther\n");
+    int size_of_queue = (int)queue_size((queue_t*)queue_ready);
     // Enquanto houverem tarefas prontas para serem executadas o loop continua
-    while ( sizeof((queue_t*)queue_ready) >=  1 )
+    while ( size_of_queue > 0 )
     {
+        task_t *task_next;
+        task_next = NULL;
         // a funçao scheduler decide qual a procima tarefa a ser executada
-        task_next = scheduler() ; // scheduler é uma função
+        task_next = scheduler() ; // scheduler retorna a proxima tarefa
         if (task_next != NULL){
 
             // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
-            task_next = (task_t*)queue_remove((queue_t**)&queue_ready,(queue_t*)task_next);
-           
+                     // queue_remove(task_next->ptr_queue,(queue_t*)task_next);
+                      // task_next->ptr_queue =  NULL;
+            queue_remove((queue_t**)&queue_ready, (queue_t*)task_next);
+            task_next->ptr_queue = NULL;
             // a tarafa next é lançada  
             task_switch (task_next) ; // transfere controle para a tarefa "next"
-
             // ... // ações após retornar da tarefa "next", se houverem
-            // não se se precisa de algo aqui
+            
         }
+        size_of_queue = (int)queue_size((queue_t*)queue_ready);
     }
     task_exit(0) ; // encerra a tarefa dispatcher
 }
 
+// libera o processador para a próxima tarefa, retornando à fila de tarefas
+// prontas ("ready queue")
+
+void task_yield () {
+    
+    if (task_current->t_id > 1) {
+        queue_append((queue_t**)(&queue_ready), (queue_t*)(&task_current));
+        task_current->ptr_queue = (queue_t**)(&queue_ready);
+        task_current->state = READY;
+    }
+    // Dispatcher assume o controle
+    task_switch(&task_dispacther);
+}
 
 
 // suspende uma tarefa, retirando-a de sua fila atual, adicionando-a à fila
@@ -190,7 +209,7 @@ void task_suspend (task_t *task, task_t **queue){
 
     //REMOVE DA QUEUE_READY?
     if(queue != NULL){
-        aux = queue_remove((queue_t**)(&queue_ready),(queue_t*)(task));
+        aux = queue_remove((queue_t**)(&task->ptr_queue),(queue_t*)(task));
         // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
         if(aux == NULL){
             printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
@@ -200,6 +219,7 @@ void task_suspend (task_t *task, task_t **queue){
             task->state = SUSPENDED;
             // Inclusão da tarefa na fila de suspensos
             queue_append((queue_t**)(&queue),(queue_t*)(task));
+            task->ptr_queue = (queue_t**)(&queue);
         }
     }
 
@@ -209,21 +229,12 @@ void task_suspend (task_t *task, task_t **queue){
 // tarefas prontas ("ready queue") e mudando seu estado para "pronta"
 void task_resume (task_t *task){
     task_t* task_aux = NULL;
-    task_aux = (task_t*)queue_remove((queue_t**)(&queue_suspended),(queue_t*)(&task));
+    task_aux = (task_t*)queue_remove((queue_t**)(&task->ptr_queue),(queue_t*)(&task));
     task_aux->state = READY;
-    queue_append((queue_t**)(&queue_ready),(queue_t*)(&task_aux));
+    queue_append((queue_t**)(&queue_ready),(queue_t*)(task_aux));
+    task->ptr_queue = (queue_t**)(&queue_ready);
 }
 
 
-// libera o processador para a próxima tarefa, retornando à fila de tarefas
-// prontas ("ready queue")
-void task_yield () {
 
-    if (task_current->t_id != 0) {
-        queue_append((queue_t**)(&queue_ready), (queue_t*)(&task_current));
-        task_current->state = READY;
-    }
-    // Dispatcher assumeo controle
-    task_switch(&task_dispacther);
-
-}
+ 
