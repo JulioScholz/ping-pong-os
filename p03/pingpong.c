@@ -10,7 +10,7 @@ Professor: Marco Aurélio Wehrmeister
 #include "pingpong.h"
 
 task_t *task_current, task_main, task_dispacther;
-task_t *queue_ready;    
+task_t *queue_ready = NULL;    
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 
 void dispatcher_body(void* arg); 
@@ -85,8 +85,11 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     task->state = READY;
 
     if( task->t_id > 1){
-        queue_append((queue_t**)(&queue_ready),(queue_t*) (task));
-        task->ptr_queue = (queue_t**)(&queue_ready);
+        queue_append((queue_t**)&queue_ready,(queue_t*) (task));
+        task->ptr_queue = (queue_t**)&queue_ready;
+        #ifdef DEBUG
+        printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
+        #endif
     }
     #ifdef DEBUG
 	printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
@@ -114,7 +117,7 @@ int task_switch (task_t *task){
     printf ("task_switch: trocando contexto %d -> %d\n", task_previous->t_id, task->t_id) ;
     #endif 
     // troca de contextos
-    if (swapcontext (&(task_previous->context), &(task->context)) < 0) {
+    if (swapcontext (&(task_previous->context), &(task_current->context)) < 0) {
         printf ("Error on task_switch: Troca de Contexto falhou! \n");
         return -1;
     }
@@ -128,7 +131,8 @@ void task_exit (int exitCode) {
     #endif  
     //Se a tarefa corrente que está pra sair não for o dispatcher, o dispacther assume
     if (task_current != &task_dispacther) {
-        queue_remove((queue_t**)(&queue_ready), (queue_t*)(task_current));
+        //queue_remove((queue_t**)(&queue_ready), (queue_t*)(task_current));
+        //queue_remove((queue_t**)(task_current->ptr_queue), (queue_t*)(task_current));
         task_switch(&task_dispacther);
     }
     // Se o dispatcher for sair, o controle passa para a main
@@ -151,26 +155,34 @@ task_t *scheduler(){
     task_t *task_aux = NULL;
     //O primeiro elemento da fila de prontos é escolhido pelo scheduler
     task_aux = queue_ready;
+
+    #ifdef DEBUG
+    printf("scheduler: Task %d foi escolhida pelo scheduler\n", task_aux->t_id);
+    #endif
+
     return task_aux;
 }
 
 void dispatcher_body (void *arg) // dispatcher é uma tarefa
 {
-    printf("\nentrou dispacther\n");
+    
+    
     int size_of_queue = (int)queue_size((queue_t*)queue_ready);
     // Enquanto houverem tarefas prontas para serem executadas o loop continua
     while ( size_of_queue > 0 )
     {
-        task_t *task_next;
-        task_next = NULL;
+        task_t *task_next = scheduler();
+        //task_next = NULL;
         // a funçao scheduler decide qual a procima tarefa a ser executada
-        task_next = scheduler() ; // scheduler retorna a proxima tarefa
+      //  task_next = scheduler() ; // scheduler retorna a proxima tarefa
         if (task_next != NULL){
-
             // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
                      // queue_remove(task_next->ptr_queue,(queue_t*)task_next);
                       // task_next->ptr_queue =  NULL;
             queue_remove((queue_t**)&queue_ready, (queue_t*)task_next);
+            #ifdef DEBUG
+             printf("dispatcher_body: Task %d foi removida da fila de prontos\n", task_next->t_id);
+            #endif
             task_next->ptr_queue = NULL;
             // a tarafa next é lançada  
             task_switch (task_next) ; // transfere controle para a tarefa "next"
@@ -188,11 +200,17 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 void task_yield () {
     
     if (task_current->t_id > 1) {
-        queue_append((queue_t**)(&queue_ready), (queue_t*)(&task_current));
+       // queue_remove((queue_t**)&queue_ready, (queue_t*)(&task_current));
+        queue_append((queue_t**)&queue_ready, (queue_t*)(task_current));
         task_current->ptr_queue = (queue_t**)(&queue_ready);
         task_current->state = READY;
+
+        #ifdef DEBUG
+        printf("task_yield: Task %d foi adicionada a fila de prontos\n", task_current->t_id);
+        #endif
     }
     // Dispatcher assume o controle
+    
     task_switch(&task_dispacther);
 }
 
