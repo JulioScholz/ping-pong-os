@@ -155,67 +155,56 @@ int task_id (){
 
 task_t *scheduler(){
     #ifdef DEBUG
-    printf("Iniciando o scheduler()\n");
+    printf("schdueler: Iniciando\n");
     #endif
     task_t *task_aux = NULL;
 
     // Se a fila estiver vazia
     if (queue_ready == NULL)
         return NULL;
+
     // Se somente um elemento está contido na fila de prontas
     // Este único elemento é escolhido;
     else if ( queue_ready == queue_ready->next )
 	{
-		queue_ready->priority_dynamic = queue_ready->priority_static;
-		return queue_ready;
+		task_aux = queue_ready;
 	}
-    // senão se a fila conter mais de um elemento
+
+    //se a fila conter mais de um elemento
     else{
-        task_t* actualItem = queue_ready;
+        // ponteiro para a tarefa que será escolhida
+        task_t* priority_task = queue_ready;
         task_aux = queue_ready;
-         #ifdef DEBUG
-            printf("0\n");
-            #endif
-        int aux_prio_d = (task_aux->next)->priority_dynamic;
-        int aux_prio_e = (task_aux->next)->priority_static;
+        // inteiro auxiliar quer armazzenara o valor da prioridade dinamica da tarefa a ser comparada
+        int aux_prio_d;
 
-          #ifdef DEBUG
-            printf("1\n");
-            #endif
-
-        while(task_aux->next != queue_ready){
+        do{
+            //Envelhicento de tarefas, respeitando o range de prioridades
             if (task_aux->priority_dynamic > -20)
 			    task_aux->priority_dynamic--;
-                   #ifdef DEBUG
-            printf("2\n");
-            #endif
 
-            if( actualItem->priority_dynamic > aux_prio_d ||
-                (actualItem->priority_dynamic == aux_prio_d && actualItem->priority_static > aux_prio_e)
-            )
-            {
-                actualItem = task_aux;
+            aux_prio_d = task_aux->priority_dynamic;
+            // Critério: a tarefa prioritaria sempre será uma tarefa comprioridade menor ou igual a atual     
+            if( priority_task->priority_dynamic >=  aux_prio_d ){
+
+                //Como a prioridade dinâica da tarefa seguinte é menor, ela é escolhida
+                priority_task = task_aux;
             }
-               #ifdef DEBUG
-            printf("3\n");
-            #endif
 
-           
-            aux_prio_d = (task_aux->next)->priority_dynamic;
-            aux_prio_e = (task_aux->next)->priority_static;
-            task_aux = task_aux->next;
-               #ifdef DEBUG
-            printf("4\n");
-            #endif
+            //Proxima tarefa a ser comparada
+                task_aux = task_aux->next;
 
-        }
-         task_aux = actualItem;
+        }while(task_aux != queue_ready);
+    
+         task_aux = priority_task;
     }
     #ifdef DEBUG
     printf("scheduler: Task %d foi escolhida pelo scheduler\n", task_aux->t_id);
     #endif
 
-   
+     //como a tarefa foi escolhida sua pripridade dinâmica é resetada;
+    task_aux->priority_dynamic =  task_aux->priority_static;
+
     return task_aux;
 }
 
@@ -319,10 +308,12 @@ void task_setprio (task_t *task, int prio){
         printf("Error on task_setprio: Impossível setar prioridade fora do range\n");
 
     if (task != NULL){
-        task->priority_dynamic = task->priority_static = prio;
+        task->priority_dynamic =prio;
+        task->priority_static = prio;
     }
     else{
-        task_current->priority_dynamic = task_current->priority_static = prio;
+        task_current->priority_dynamic = prio;
+        task_current->priority_static = prio;
     }
     
 }
