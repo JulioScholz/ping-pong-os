@@ -19,7 +19,8 @@ typedef struct task_t
  	char state;
   int t_id ;              //Inteiro para identificação da tarefa
   ucontext_t context;
-  int priority;
+  int priority_estatic;
+  int priority_dynamic;
   
 } task_t ;
 

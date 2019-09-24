@@ -53,9 +53,6 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     task->next = NULL;
     task->prev = NULL;
 
-    // Seta a prioridade inicial: 0
-    task->priority = 0;
-
     // Referência para a tarefa main
     task->main = &task_main;
 
@@ -87,6 +84,10 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     //A criaçao da tarefa terminou, seu estado passa a ser READY ('r')
     task->state = READY;
 
+    // Seta a prioridade estática e dinâmica para 0
+    task->priority_estatic = 0;
+    task->priority_dynamic = 0;
+
     if( task->t_id > 1){
         queue_append((queue_t**)&queue_ready,(queue_t*) (task));
         task->ptr_queue = (queue_t**)&queue_ready;
@@ -112,7 +113,7 @@ int task_switch (task_t *task){
     }
     // ponteiro auxiliar que indica a tarefa anterior.
     task_previous = task_current;
-  //  task_previous.state
+    //  task_previous.state
     // a tarefa corrente passa a ser a nova tarefa recebida.
     task_current = task;
 
@@ -134,8 +135,6 @@ void task_exit (int exitCode) {
     #endif  
     //Se a tarefa corrente que está pra sair não for o dispatcher, o dispacther assume
     if (task_current != &task_dispacther) {
-        //queue_remove((queue_t**)(&queue_ready), (queue_t*)(task_current));
-        //queue_remove((queue_t**)(task_current->ptr_queue), (queue_t*)(task_current));
         task_switch(&task_dispacther);
     }
     // Se o dispatcher for sair, o controle passa para a main
@@ -152,27 +151,36 @@ int task_id (){
     return (task_current->t_id);
 }
 
-// FCFS -> first come, first served
 // em função da implementação do dia 23/09, agora o algoritmo está mais para um PRIOp
 
 task_t *scheduler(){
-    
     task_t *task_aux = NULL;
-    int maxPriority = 0;
 
     // Se a fila estiver vazia
     if (queue_ready == NULL)
         return NULL;
-    // se a fila não estiver vazia
+    // Se somente um elemento está contido na fila de prontas
+    // Este único elemto é escolhido;
+    else if ( queue_ready == queue_ready->next )
+	{
+		queue_ready->priority_dynamic = queue_ready->priority_estatic;
+		return queue_ready;
+	}
+    // se a fila conter mais de um elemento
     else{
         task_t* actualItem = queue_ready;
+       
+        int maxPriority = 0;
+
+        if (actualItem->priority_dynamic > -20)
+			actualItem->priority_dynamic--;
         // verifica até que a fila faça a volta
         while(actualItem->next != queue_ready){
-            if (actualItem->priority > maxPriority)
+            if (actualItem->priority_estatic < maxPriority)
                 task_aux = actualItem;
              actualItem = actualItem->next;
              // se a tarefa não for a escolhida, envelhece um ponto
-             actualItem->prev->priority++;
+             actualItem->prev->priority_estatic--;
         }
     }
     #ifdef DEBUG
@@ -185,24 +193,23 @@ task_t *scheduler(){
 void dispatcher_body (void *arg) // dispatcher é uma tarefa
 {
     
-    
     int size_of_queue = (int)queue_size((queue_t*)queue_ready);
     // Enquanto houverem tarefas prontas para serem executadas o loop continua
     while ( size_of_queue > 0 )
     {
-        task_t *task_next = scheduler();
-        //task_next = NULL;
+        task_t *task_next;
+        task_next = NULL;
         // a funçao scheduler decide qual a procima tarefa a ser executada
-      //  task_next = scheduler() ; // scheduler retorna a proxima tarefa
+        task_next = scheduler() ; // scheduler retorna a proxima tarefa
+
         if (task_next != NULL){
             // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
-                     // queue_remove(task_next->ptr_queue,(queue_t*)task_next);
-                      // task_next->ptr_queue =  NULL;
             queue_remove((queue_t**)&queue_ready, (queue_t*)task_next);
             #ifdef DEBUG
              printf("dispatcher_body: Task %d foi removida da fila de prontos\n", task_next->t_id);
             #endif
             task_next->ptr_queue = NULL;
+
             // a tarafa next é lançada  
             task_switch (task_next) ; // transfere controle para a tarefa "next"
             // ... // ações após retornar da tarefa "next", se houverem
@@ -219,7 +226,7 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 void task_yield () {
     
     if (task_current->t_id > 1) {
-       // queue_remove((queue_t**)&queue_ready, (queue_t*)(&task_current));
+
         queue_append((queue_t**)&queue_ready, (queue_t*)(task_current));
         task_current->ptr_queue = (queue_t**)(&queue_ready);
         task_current->state = READY;
@@ -229,7 +236,6 @@ void task_yield () {
         #endif
     }
     // Dispatcher assume o controle
-    
     task_switch(&task_dispacther);
 }
 
@@ -259,9 +265,7 @@ void task_suspend (task_t *task, task_t **queue){
             task->ptr_queue = (queue_t**)(&queue);
         }
     }
-
 }
-
 // acorda uma tarefa, retirando-a de sua fila atual, adicionando-a à fila de
 // tarefas prontas ("ready queue") e mudando seu estado para "pronta"
 void task_resume (task_t *task){
@@ -271,25 +275,27 @@ void task_resume (task_t *task){
     queue_append((queue_t**)(&queue_ready),(queue_t*)(task_aux));
     task->ptr_queue = (queue_t**)(&queue_ready);
 }
-
 // recolhe a prioridade estática da tarefa task
 int task_getprio (task_t *task) {
 
     if (task != NULL)
-        return task->priority;
+        return task->priority_estatic;
     else
-        return task_current->priority;
+        return task_current->priority_estatic;
 }
 // seta a prioridade
 void task_setprio (task_t *task, int prio){
 
     if (prio < -20 || prio > 20)
-        printf("Impossível setar prioridade fora do range");
+        printf("Error on task_setprio: Impossível setar prioridade fora do range\n");
 
-    if (task != NULL)
-        task->priority = prio;
-    else
-        task_current->priority = prio;
+    if (task != NULL){
+        task->priority_dynamic = task->priority_estatic = prio;
+    }
+    else{
+        task_current->priority_dynamic = task_current->priority_estatic = prio;
+    }
+    
 }
 
 
