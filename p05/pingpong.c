@@ -13,8 +13,14 @@ task_t *task_current, task_main, task_dispacther;
 task_t *queue_ready = NULL;    
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 
+struct sigaction action ; // estrutura que define um tratador de sinal (deve ser global ou static)
+struct itimerval timer; // estrutura de inicialização to timer
+int quantum; //
+
+
 void dispatcher_body(void* arg); 
 task_t* scheduler();
+void signal_handler(int singnum); // Função que trata os sinais recebidos
 
 // Inicializa o sistema operacional; deve ser chamada no inicio do main()
 void pingpong_init () {
@@ -33,13 +39,42 @@ void pingpong_init () {
 
     // Referência a si mesmo
     task_main.main = &task_main;
-
+    task_main.t_type = SYSTEM_TASK;
 
     // criação da tarefa dispatcher
-    task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); // <- não sei se NULL é o correto aqui
-    
+    task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); 
+    task_dispacther.t_type = SYSTEM_TASK;
+ 
     // A tarefa em execução é a main
     task_current = &task_main;
+
+    //Inicialização de timer e sinais e demais tratamentos para os mesmos
+    #ifdef DEBUG
+    printf("Setando timers e sinais\n")
+    #endif
+    action.sa_handler = signal_handler ;
+    sigemptyset (&action.sa_mask) ;
+    action.sa_flags = 0 ;
+    if (sigaction (SIGALRM, &action, 0) < 0)
+    {
+        printf ("Erro em pingpong_init(): Erro em sigaction\n ") ;
+        exit (1) ;
+    }
+
+    // ajusta valores do temporizador
+    timer.it_value.tv_usec = 100 ;      // primeiro disparo, em micro-segundos
+    timer.it_value.tv_sec  = 0 ;      // primeiro disparo, em segundos
+    timer.it_interval.tv_usec = 1000 ;   // disparos subsequentes, em micro-segundos
+    timer.it_interval.tv_sec  = 0 ;   // disparos subsequentes, em segundos
+
+    // arma o temporizador ITIMER_REAL (vide man setitimer)
+    if (setitimer (ITIMER_REAL, &timer, 0) < 0)
+    {
+        printf ("Erro em pingpong_init(): Erro em setitimer \n") ;
+        exit (1) ;
+    }
+
+
 
     #ifdef DEBUG
     printf("PingPongOS iniciado com êxito.\n");
@@ -89,12 +124,14 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     task->priority_dynamic = 0;
 
     if( task->t_id > 1){
+        task->t_type = USER_TASK;
         queue_append((queue_t**)&queue_ready,(queue_t*) (task));
         task->ptr_queue = (queue_t**)&queue_ready;
         #ifdef DEBUG
         printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
         #endif
     }
+  
     #ifdef DEBUG
 	printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
     #endif
@@ -185,7 +222,7 @@ task_t *scheduler(){
 
             aux_prio_d = task_aux->priority_dynamic;
             // Critério: a tarefa prioritaria sempre será uma tarefa comprioridade menor ou igual a atual     
-            if( priority_task->priority_dynamic >=  aux_prio_d ){
+            if( priority_task->priority_dynamic >  aux_prio_d ){
 
                 //Como a prioridade dinâica da tarefa seguinte é menor, ela é escolhida
                 priority_task = task_aux;
@@ -227,6 +264,8 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
              printf("dispatcher_body: Task %d foi removida da fila de prontos\n", task_next->t_id);
             #endif
             task_next->ptr_queue = NULL;
+            //O quantum é resetado para o valor padrão do sistema:
+            quantum = QUANTUM;
 
             // a tarafa next é lançada  
             task_switch (task_next) ; // transfere controle para a tarefa "next"
@@ -255,6 +294,24 @@ void task_yield () {
     }
     // Dispatcher assume o controle
     task_switch(&task_dispacther);
+}
+
+void signal_handler(int singnum){
+
+    //Se a tarefa atual for uma tarefa de usário ela poderá ser “preemptada” caso necessário
+    // então a cada chama do tratador seu quantum diminui
+	if(task_current->t_type == USER_TASK){
+        if(quantum < 1){
+			#ifdef DEBUG
+			printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
+			#endif
+			task_yield();
+		}
+		else{
+			quantum--;
+		}
+	}
+    return;
 }
 
 
