@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/datatypes.h
+queue.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/queue.h
+stdio.h
+-
+stdlib.h
+-
+ucontext.h
+-
+sys/time.h
+-
+signal.h
+-
+
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/pingpong.c
+pingpong.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/pingpong.h
+
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/pingpong.h
+datatypes.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/datatypes.h
+
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/queue.h
+

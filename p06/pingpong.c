@@ -13,8 +13,16 @@ task_t *task_current, task_main, task_dispacther;
 task_t *queue_ready = NULL;    
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 
+struct sigaction action ; // estrutura que define um tratador de sinal (deve ser global ou static)
+struct itimerval timer; // estrutura de inicialização to timer
+int quantum; //
+unsigned int delta = 0;
+unsigned int timeInit = 0;
+unsigned int timeLast = 0;
+
 void dispatcher_body(void* arg); 
 task_t* scheduler();
+void signal_handler(int singnum); // Função que trata os sinais recebidos
 
 // Inicializa o sistema operacional; deve ser chamada no inicio do main()
 void pingpong_init () {
@@ -33,13 +41,40 @@ void pingpong_init () {
 
     // Referência a si mesmo
     task_main.main = &task_main;
-
+    task_main.t_type = SYSTEM_TASK;
 
     // criação da tarefa dispatcher
-    task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); // <- não sei se NULL é o correto aqui
-    
+    task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); 
+    task_dispacther.t_type = SYSTEM_TASK;
+ 
     // A tarefa em execução é a main
     task_current = &task_main;
+
+    //Inicialização de timer e sinais e demais tratamentos para os mesmos
+    #ifdef DEBUG
+    printf("Setando timers e sinais\n")
+    #endif
+    action.sa_handler = signal_handler;
+    sigemptyset (&action.sa_mask) ;
+    action.sa_flags = 0 ;
+    if (sigaction (SIGALRM, &action, 0) < 0)
+    {
+        printf ("Erro em pingpong_init(): Erro em sigaction\n ") ;
+        exit (1) ;
+    }
+
+    // ajusta valores do temporizador
+    timer.it_value.tv_usec = 100 ;      // primeiro disparo, em micro-segundos
+    timer.it_value.tv_sec  = 0 ;      // primeiro disparo, em segundos
+    timer.it_interval.tv_usec = 1000 ;   // disparos subsequentes, em micro-segundos
+    timer.it_interval.tv_sec  = 0 ;   // disparos subsequentes, em segundos
+
+    // arma o temporizador ITIMER_REAL (vide man setitimer)
+    if (setitimer (ITIMER_REAL, &timer, 0) < 0)
+    {
+        printf ("Erro em pingpong_init(): Erro em setitimer \n") ;
+        exit (1) ;
+    }
 
     #ifdef DEBUG
     printf("PingPongOS iniciado com êxito.\n");
@@ -78,6 +113,11 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
 
     // A nova tarefa recebe o contador, como id
     task->t_id = count_id;
+
+    task->execution = systime();
+    task->act = 0;
+    task->processor = 0;
+
     // O contador é incrementado para que futuras tarefas possam utiliza-lo
     count_id = count_id + 1;
 
@@ -89,12 +129,14 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     task->priority_dynamic = 0;
 
     if( task->t_id > 1){
+        task->t_type = USER_TASK;
         queue_append((queue_t**)&queue_ready,(queue_t*) (task));
         task->ptr_queue = (queue_t**)&queue_ready;
         #ifdef DEBUG
         printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
         #endif
     }
+  
     #ifdef DEBUG
 	printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
     #endif
@@ -132,7 +174,12 @@ int task_switch (task_t *task){
 void task_exit (int exitCode) {
     #ifdef DEBUG
     printf ("task_exit: tarefa %d sendo encerrada\n", task_current->t_id) ;
-    #endif  
+    #endif
+
+    task_current->execution = systime() - task_current->execution;
+    printf ("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", task_current->t_id,
+            task_current->execution, task_current->processor, task_current->act);
+
     //Se a tarefa corrente que está pra sair não for o dispatcher, o dispacther assume
     if (task_current != &task_dispacther) {
         task_switch(&task_dispacther);
@@ -170,12 +217,12 @@ task_t *scheduler(){
 		task_aux = queue_ready;
 	}
 
-    //se a fila contiver mais de um elemento
+    //se a fila conter mais de um elemento
     else{
         // ponteiro para a tarefa que será escolhida
         task_t* priority_task = queue_ready;
         task_aux = queue_ready;
-        // inteiro auxiliar quer armazenara o valor da prioridade dinamica da tarefa a ser comparada
+        // inteiro auxiliar quer armazzenara o valor da prioridade dinamica da tarefa a ser comparada
         int aux_prio_d;
 
         do{
@@ -185,7 +232,7 @@ task_t *scheduler(){
 
             aux_prio_d = task_aux->priority_dynamic;
             // Critério: a tarefa prioritaria sempre será uma tarefa comprioridade menor ou igual a atual     
-            if( priority_task->priority_dynamic >=  aux_prio_d ){
+            if( priority_task->priority_dynamic >  aux_prio_d ){
 
                 //Como a prioridade dinâica da tarefa seguinte é menor, ela é escolhida
                 priority_task = task_aux;
@@ -221,12 +268,18 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
         task_next = scheduler() ; // scheduler retorna a proxima tarefa
 
         if (task_next != NULL){
+            // contabiliza o início da tarefa
+            timeLast = timeInit;
+            timeInit = systime();
+
             // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
             queue_remove((queue_t**)&queue_ready, (queue_t*)task_next);
             #ifdef DEBUG
              printf("dispatcher_body: Task %d foi removida da fila de prontos\n", task_next->t_id);
             #endif
             task_next->ptr_queue = NULL;
+            //O quantum é resetado para o valor padrão do sistema:
+            quantum = QUANTUM;
 
             // a tarafa next é lançada  
             task_switch (task_next) ; // transfere controle para a tarefa "next"
@@ -240,7 +293,6 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 
 // libera o processador para a próxima tarefa, retornando à fila de tarefas
 // prontas ("ready queue")
-
 void task_yield () {
     
     if (task_current->t_id > 1) {
@@ -257,6 +309,25 @@ void task_yield () {
     task_switch(&task_dispacther);
 }
 
+void signal_handler(int singnum) {
+
+    //Se a tarefa atual for uma tarefa de usário ela poderá ser “preemptada” caso necessário
+    // então a cada chama do tratador seu quantum diminui
+    if (task_current->t_type == USER_TASK) {
+        if (quantum < 1) {
+            #ifdef DEBUG
+            printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
+            #endif
+            task_yield();
+            task_current->act++;
+            task_current->processor += systime() - timeLast;
+        } else {
+            quantum--;
+        }
+        delta++;
+        return;
+    }
+}
 
 // suspende uma tarefa, retirando-a de sua fila atual, adicionando-a à fila
 // queue e mudando seu estado para "suspensa"; usa a tarefa atual se task==NULL
@@ -284,6 +355,7 @@ void task_suspend (task_t *task, task_t **queue){
         }
     }
 }
+
 // acorda uma tarefa, retirando-a de sua fila atual, adicionando-a à fila de
 // tarefas prontas ("ready queue") e mudando seu estado para "pronta"
 void task_resume (task_t *task){
@@ -293,6 +365,7 @@ void task_resume (task_t *task){
     queue_append((queue_t**)(&queue_ready),(queue_t*)(task_aux));
     task->ptr_queue = (queue_t**)(&queue_ready);
 }
+
 // recolhe a prioridade estática da tarefa task
 int task_getprio (task_t *task) {
 
@@ -301,6 +374,7 @@ int task_getprio (task_t *task) {
     else
         return task_current->priority_static;
 }
+
 // seta a prioridade
 void task_setprio (task_t *task, int prio){
 
@@ -318,6 +392,7 @@ void task_setprio (task_t *task, int prio){
     
 }
 
-
-
- 
+// retorna o relógio atual (em milisegundos)
+unsigned int systime (){
+    return delta;
+}
