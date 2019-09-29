@@ -42,11 +42,12 @@ void pingpong_init () {
     // Referência a si mesmo
     task_main.main = &task_main;
     task_main.t_type = SYSTEM_TASK;
+    task_main.act = 0;
 
     // criação da tarefa dispatcher
     task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); 
     task_dispacther.t_type = SYSTEM_TASK;
- 
+    task_dispacther.act = 0;
     // A tarefa em execução é a main
     task_current = &task_main;
 
@@ -264,6 +265,7 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
     {
         task_t *task_next;
         task_next = NULL;
+        task_current->act++;
         // a funçao scheduler decide qual a procima tarefa a ser executada
         task_next = scheduler() ; // scheduler retorna a proxima tarefa
 
@@ -318,15 +320,17 @@ void signal_handler(int singnum) {
             #ifdef DEBUG
             printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
             #endif
-            task_yield();
             task_current->act++;
             task_current->processor += systime() - timeLast;
+            task_yield();
+            
         } else {
             quantum--;
         }
         delta++;
         return;
     }
+   
 }
 
 // suspende uma tarefa, retirando-a de sua fila atual, adicionando-a à fila
