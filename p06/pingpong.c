@@ -1,10 +1,8 @@
 /*
-Aluno: Júlio César Werner Scholz
-RA: 2023890
+Alunos: Júlio César Werner Scholz - 2023890
+        Juliana Rodrigues Viscenheski - 1508873
 Data de inicio: 03/09/2019
-Data de término 15/09/2019
-Sistemas operacionais - CSO30 - S73 - 2019/2
-Professor: Marco Aurélio Wehrmeister
+Data de término 26/09/2019
 */
 
 #include "pingpong.h"
@@ -56,7 +54,6 @@ void pingpong_init () {
     printf("Setando timers e sinais\n")
     #endif
     action.sa_handler = signal_handler;
-    printf("%d", delta);
     sigemptyset (&action.sa_mask) ;
     action.sa_flags = 0 ;
     if (sigaction (SIGALRM, &action, 0) < 0)
@@ -266,13 +263,15 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
     {
         task_t *task_next;
         task_next = NULL;
+        // aumenta o número de ativações da tarefa, uma vez que o dispatcher precisou ativá-la
         task_current->act++;
-        // a funçao scheduler decide qual a procima tarefa a ser executada
+        // a funçao scheduler decide qual a proxima tarefa a ser executada
         task_next = scheduler() ; // scheduler retorna a proxima tarefa
 
         if (task_next != NULL){
-            // contabiliza o início da tarefa
+            // contabiliza o início da próxima  tarefa
             timeLast = timeInit;
+            // como o delta é o nosso relógio corrido, o início da tarefa será o tempo atual do delta
             timeInit = systime();
 
             // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
@@ -322,12 +321,14 @@ void signal_handler(int singnum) {
             printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
             #endif
             task_current->act++;
+            // o tempo de processador será o tempo total (delta corrido) menos o momento no qual a última tarefa foi finalizada
             task_current->processor += systime() - timeLast;
             task_yield();
             
         } else {
             quantum--;
         }
+        // relógio aumenta
         delta++;
         return;
     }
