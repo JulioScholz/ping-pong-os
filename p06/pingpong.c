@@ -55,6 +55,7 @@ void pingpong_init () {
     printf("Setando timers e sinais\n")
     #endif
     action.sa_handler = signal_handler;
+    printf("%d", delta);
     sigemptyset (&action.sa_mask) ;
     action.sa_flags = 0 ;
     if (sigaction (SIGALRM, &action, 0) < 0)
