@@ -1,6 +1,6 @@
 /*
-Aluno: Júlio César Werner Scholz
-RA: 2023890
+Alunos: Júlio César Werner Scholz - 2023890
+        Juliana Rodrigues Viscenheski - 1508873
 Data de inicio: 31/08/2019
 Data de término 01/09/2019
 
@@ -26,7 +26,7 @@ void queue_append (queue_t **queue, queue_t *elem) {
         printf("Error on queue_append: Elemento nao existe! \n");
         return;
     }
-    if (elem->prev !=NULL || elem->prev != NULL){
+    if (elem->prev !=NULL){
         printf("Error on queue_append: O elemento possui ligacao em outra fila! \n");
         return;
     }

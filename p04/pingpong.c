@@ -1,10 +1,8 @@
 /*
-Aluno: Júlio César Werner Scholz
-RA: 2023890
+Alunos: Júlio César Werner Scholz - 2023890
+        Juliana Rodrigues Viscenheski - 1508873
 Data de inicio: 03/09/2019
 Data de término 15/09/2019
-Sistemas operacionais - CSO30 - S73 - 2019/2
-Professor: Marco Aurélio Wehrmeister
 */
 
 #include "pingpong.h"
@@ -184,10 +182,10 @@ task_t *scheduler(){
 			    task_aux->priority_dynamic--;
 
             aux_prio_d = task_aux->priority_dynamic;
-            // Critério: a tarefa prioritaria sempre será uma tarefa comprioridade menor ou igual a atual     
+            // Critério: a tarefa prioritaria sempre será uma tarefa com prioridade menor ou igual a atual
             if( priority_task->priority_dynamic >=  aux_prio_d ){
 
-                //Como a prioridade dinâica da tarefa seguinte é menor, ela é escolhida
+                //Como a prioridade dinâmica da tarefa seguinte é menor, ela é escolhida
                 priority_task = task_aux;
             }
 
@@ -202,7 +200,7 @@ task_t *scheduler(){
     printf("scheduler: Task %d foi escolhida pelo scheduler\n", task_aux->t_id);
     #endif
 
-     //como a tarefa foi escolhida sua pripridade dinâmica é resetada;
+     //como a tarefa foi escolhida sua prioridade dinâmica é resetada;
     task_aux->priority_dynamic =  task_aux->priority_static;
 
     return task_aux;

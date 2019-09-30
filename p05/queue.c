@@ -1,9 +1,8 @@
 /*
-Aluno: Júlio César Werner Scholz
-RA: 2023890
+Alunos: Júlio César Werner Scholz - 2023890
+        Juliana Rodrigues Viscenheski - 1508873
 Data de inicio: 31/08/2019
 Data de término 01/09/2019
-
 */
 
 #include "queue.h"
