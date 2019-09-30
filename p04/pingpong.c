@@ -215,10 +215,11 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
     {
         task_t *task_next;
         task_next = NULL;
-        // a funçao scheduler decide qual a procima tarefa a ser executada
+        // a funçao scheduler decide qual a proxima tarefa a ser executada
         task_next = scheduler() ; // scheduler retorna a proxima tarefa
 
-        if (task_next != NULL){
+        if (task_next != NULL)
+        {
             // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
             queue_remove((queue_t**)&queue_ready, (queue_t*)task_next);
             #ifdef DEBUG
@@ -253,6 +254,9 @@ void task_yield () {
     }
     // Dispatcher assume o controle
     task_switch(&task_dispacther);
+    #ifdef DEBUG
+    printf("task_yield: Dispatcher assumindo o controle!\n");
+    #endif
 }
 
 
