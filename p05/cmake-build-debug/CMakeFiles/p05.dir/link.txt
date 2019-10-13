@@ -1,1 +1,0 @@
-/usr/bin/cc -g  -Wl,--enable-auto-import CMakeFiles/p05.dir/queue.c.o CMakeFiles/p05.dir/pingpong.c.o CMakeFiles/p05.dir/pingpong-preempcao.c.o CMakeFiles/p05.dir/signal.c.o CMakeFiles/p05.dir/timer.c.o  -o p05.exe -Wl,--out-implib,libp05.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
