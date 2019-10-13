@@ -1,3 +1,0 @@
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/cmake-build-debug/CMakeFiles/p06.dir
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p06/cmake-build-debug/CMakeFiles/edit_cache.dir
