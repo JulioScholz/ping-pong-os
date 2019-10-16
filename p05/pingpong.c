@@ -53,6 +53,7 @@ void pingpong_init () {
     action.sa_handler = signal_handler ;
     sigemptyset (&action.sa_mask) ;
     action.sa_flags = 0 ;
+
     if (sigaction (SIGALRM, &action, 0) < 0)
     {
         printf ("Erro em pingpong_init(): Erro em sigaction\n ") ;
@@ -219,8 +220,9 @@ task_t *scheduler(){
 			    task_aux->priority_dynamic--;
 
             aux_prio_d = task_aux->priority_dynamic;
-            // Critério: a tarefa prioritaria sempre será uma tarefa comprioridade menor ou igual a atual     
-            if( priority_task->priority_dynamic >  aux_prio_d ){
+            // Critério: a tarefa prioritaria sempre será uma tarefa com prioridade maior que a atual     
+            if( priority_task->priority_dynamic > aux_prio_d )
+            {
 
                 //Como a prioridade dinâica da tarefa seguinte é menor, ela é escolhida
                 priority_task = task_aux;
@@ -292,6 +294,9 @@ void task_yield () {
     }
     // Dispatcher assume o controle
     task_switch(&task_dispacther);
+     #ifdef DEBUG
+    printf("task_yield: Dispatcher assumindo o controle!\n");
+    #endif
 }
 
 void signal_handler(int singnum){
@@ -362,14 +367,19 @@ void task_setprio (task_t *task, int prio){
     if (prio < -20 || prio > 20)
         printf("Error on task_setprio: Impossível setar prioridade fora do range\n");
 
-    if (task != NULL){
+    if (task != NULL)
+    {
         task->priority_dynamic =prio;
         task->priority_static = prio;
     }
-    else{
+    else
+    {
         task_current->priority_dynamic = prio;
         task_current->priority_static = prio;
     }
+    #ifdef DEBUG
+    printf("on task_setprio: Prioridades setadas com sucessso\n");
+    #endif
     
 }
 
