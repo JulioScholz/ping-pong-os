@@ -30,7 +30,7 @@ void pingpong_init () {
     //desativação do buffer da saida padrao (stdout), usado pela função printf
     setvbuf (stdout, 0, _IONBF, 0) ;
 
-    task_create(&task_main, (void*)(dispatcher_body), "main"); //alt: qual seria a equivalência do dispatcher_body?
+    //task_create(&task_main, (void*)(dispatcher_body), "main"); //alt: qual seria a equivalência do dispatcher_body?
 
     // Tarefa main possui id 0
     task_main.t_id = 0;
@@ -45,6 +45,11 @@ void pingpong_init () {
     task_main.main = &task_main;
     task_main.t_type = SYSTEM_TASK;
     task_main.act = 0;
+
+    //task_main.quantum = QUANTUM;
+    task_main.t_type = USER_TASK;
+
+    queue_append((queue_t**)&queue_ready, (queue_t*)&task_main);
 
     // criação da tarefa dispatcher
     task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); 
@@ -90,6 +95,7 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     char *stack = NULL ;
     task->next = NULL;
     task->prev = NULL;
+    //task->quantum = QUANTUM;
 
     // Referência para a tarefa main
     task->main = &task_main;
@@ -130,16 +136,18 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     // Seta a prioridade estática e dinâmica para 0
     task->priority_static = 0;
     task->priority_dynamic = 0;
+    task->t_type = USER_TASK;
 
-    if( task->t_id > 1){
+    if(task->t_id >= 1){
         task->t_type = USER_TASK;
         queue_append((queue_t**)&queue_ready,(queue_t*) (task));
         task->ptr_queue = (queue_t**)&queue_ready;
+
         #ifdef DEBUG
         printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
         #endif
     }
-  
+
     #ifdef DEBUG
 	printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
     #endif
@@ -318,7 +326,9 @@ void signal_handler(int singnum) {
 
     //Se a tarefa atual for uma tarefa de usário ela poderá ser “preemptada” caso necessário
     // então a cada chama do tratador seu quantum diminui
+    //printf("TYPE: %s \n", USER_TASK);
     if (task_current->t_type == USER_TASK) {
+        printf("Quantum: %d \n", quantum);
         if (quantum < 1) {
             #ifdef DEBUG
             printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
@@ -333,6 +343,7 @@ void signal_handler(int singnum) {
         }
         // relógio aumenta
         delta++;
+        printf("Delta %d \n", delta);
         return;
     }
    

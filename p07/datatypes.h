@@ -42,6 +42,7 @@ typedef struct task_t
   unsigned int execution;
   unsigned int processor;
   unsigned int act;
+  int quantum;
 
   
 } task_t ;
