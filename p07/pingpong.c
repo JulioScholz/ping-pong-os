@@ -57,6 +57,7 @@ void pingpong_init () {
     task_dispacther.act = 0;
     // A tarefa em execução é a main
     task_current = &task_main;
+    
 
     //Inicialização de timer e sinais e demais tratamentos para os mesmos
     #ifdef DEBUG
@@ -84,9 +85,12 @@ void pingpong_init () {
         exit (1) ;
     }
 
+
     #ifdef DEBUG
     printf("PingPongOS iniciado com êxito.\n");
     #endif
+
+    task_yield();
 }
 
 // Cria uma nova tarefa. Retorna um ID> 0 ou erro.
@@ -328,7 +332,7 @@ void signal_handler(int singnum) {
     // então a cada chama do tratador seu quantum diminui
     //printf("TYPE: %s \n", USER_TASK);
     if (task_current->t_type == USER_TASK) {
-        printf("Quantum: %d \n", quantum);
+       // printf("Quantum: %d \n", quantum);
         if (quantum < 1) {
             #ifdef DEBUG
             printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
@@ -343,7 +347,7 @@ void signal_handler(int singnum) {
         }
         // relógio aumenta
         delta++;
-        printf("Delta %d \n", delta);
+      //  printf("Delta %d \n", delta);
         return;
     }
    
