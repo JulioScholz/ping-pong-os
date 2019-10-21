@@ -43,10 +43,10 @@ RM = /cygdrive/c/Users/juvis/.CLion2019.2/system/cygwin_cmake/bin/cmake.exe -E r
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07"
+CMAKE_SOURCE_DIR = "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07"
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug"
+CMAKE_BINARY_DIR = "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug"
 
 # Include any dependencies generated for this target.
 include CMakeFiles/p07.dir/depend.make
@@ -59,42 +59,42 @@ include CMakeFiles/p07.dir/flags.make
 
 CMakeFiles/p07.dir/pingpong-maintask.c.o: CMakeFiles/p07.dir/flags.make
 CMakeFiles/p07.dir/pingpong-maintask.c.o: ../pingpong-maintask.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/p07.dir/pingpong-maintask.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/p07.dir/pingpong-maintask.c.o   -c "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong-maintask.c"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/p07.dir/pingpong-maintask.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/p07.dir/pingpong-maintask.c.o   -c "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong-maintask.c"
 
 CMakeFiles/p07.dir/pingpong-maintask.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/p07.dir/pingpong-maintask.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong-maintask.c" > CMakeFiles/p07.dir/pingpong-maintask.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong-maintask.c" > CMakeFiles/p07.dir/pingpong-maintask.c.i
 
 CMakeFiles/p07.dir/pingpong-maintask.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/p07.dir/pingpong-maintask.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong-maintask.c" -o CMakeFiles/p07.dir/pingpong-maintask.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong-maintask.c" -o CMakeFiles/p07.dir/pingpong-maintask.c.s
 
 CMakeFiles/p07.dir/pingpong.c.o: CMakeFiles/p07.dir/flags.make
 CMakeFiles/p07.dir/pingpong.c.o: ../pingpong.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/p07.dir/pingpong.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/p07.dir/pingpong.c.o   -c "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong.c"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/p07.dir/pingpong.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/p07.dir/pingpong.c.o   -c "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong.c"
 
 CMakeFiles/p07.dir/pingpong.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/p07.dir/pingpong.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong.c" > CMakeFiles/p07.dir/pingpong.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong.c" > CMakeFiles/p07.dir/pingpong.c.i
 
 CMakeFiles/p07.dir/pingpong.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/p07.dir/pingpong.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong.c" -o CMakeFiles/p07.dir/pingpong.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong.c" -o CMakeFiles/p07.dir/pingpong.c.s
 
 CMakeFiles/p07.dir/queue.c.o: CMakeFiles/p07.dir/flags.make
 CMakeFiles/p07.dir/queue.c.o: ../queue.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/p07.dir/queue.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/p07.dir/queue.c.o   -c "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/queue.c"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/p07.dir/queue.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/p07.dir/queue.c.o   -c "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/queue.c"
 
 CMakeFiles/p07.dir/queue.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/p07.dir/queue.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/queue.c" > CMakeFiles/p07.dir/queue.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/queue.c" > CMakeFiles/p07.dir/queue.c.i
 
 CMakeFiles/p07.dir/queue.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/p07.dir/queue.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/queue.c" -o CMakeFiles/p07.dir/queue.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/queue.c" -o CMakeFiles/p07.dir/queue.c.s
 
 # Object files for target p07
 p07_OBJECTS = \
@@ -110,7 +110,7 @@ p07.exe: CMakeFiles/p07.dir/pingpong.c.o
 p07.exe: CMakeFiles/p07.dir/queue.c.o
 p07.exe: CMakeFiles/p07.dir/build.make
 p07.exe: CMakeFiles/p07.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Linking C executable p07.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Linking C executable p07.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/p07.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -123,6 +123,6 @@ CMakeFiles/p07.dir/clean:
 .PHONY : CMakeFiles/p07.dir/clean
 
 CMakeFiles/p07.dir/depend:
-	cd "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug" && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug/CMakeFiles/p07.dir/DependInfo.cmake" --color=$(COLOR)
+	cd "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug" && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug/CMakeFiles/p07.dir/DependInfo.cmake" --color=$(COLOR)
 .PHONY : CMakeFiles/p07.dir/depend
 

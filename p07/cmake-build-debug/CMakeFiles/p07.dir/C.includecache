@@ -6,9 +6,9 @@
 
 #IncludeRegexTransform: 
 
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/datatypes.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/datatypes.h
 queue.h
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/queue.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/queue.h
 stdio.h
 -
 stdlib.h
@@ -20,13 +20,27 @@ sys/time.h
 signal.h
 -
 
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong.c
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong-maintask.c
+stdio.h
+-
+stdlib.h
+-
 pingpong.h
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong.h
 
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong.c
+pingpong.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong.h
+
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong.h
 datatypes.h
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/datatypes.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/datatypes.h
 
-/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/queue.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/queue.c
+queue.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/queue.h
+stdio.h
+-
+
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/queue.h
 

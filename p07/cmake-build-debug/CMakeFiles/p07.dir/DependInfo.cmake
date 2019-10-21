@@ -4,9 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong-maintask.c" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug/CMakeFiles/p07.dir/pingpong-maintask.c.o"
-  "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/pingpong.c" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug/CMakeFiles/p07.dir/pingpong.c.o"
-  "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/queue.c" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/ping-pong-os/p07/cmake-build-debug/CMakeFiles/p07.dir/queue.c.o"
+  "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong-maintask.c" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug/CMakeFiles/p07.dir/pingpong-maintask.c.o"
+  "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/pingpong.c" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug/CMakeFiles/p07.dir/pingpong.c.o"
+  "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/queue.c" "/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p07/cmake-build-debug/CMakeFiles/p07.dir/queue.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 
