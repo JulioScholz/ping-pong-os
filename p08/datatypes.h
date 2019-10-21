@@ -45,7 +45,8 @@ typedef struct task_t
   int quantum;
 
   int suspendedTaskMor;
-
+  int exitCode;
+  int isDone;
   
 } task_t ;
 

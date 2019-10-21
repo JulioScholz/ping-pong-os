@@ -25,7 +25,7 @@ void queue_append (queue_t **queue, queue_t *elem) {
         printf("Error on queue_append: Elemento nao existe! \n");
         return;
     }
-    if (elem->prev !=NULL || elem->prev != NULL){
+    if (elem->prev !=NULL){
         printf("Error on queue_append: O elemento possui ligacao em outra fila! \n");
         return;
     }
@@ -46,9 +46,6 @@ void queue_append (queue_t **queue, queue_t *elem) {
         elem->next = *queue;    //fila circular, ou seja o proximo ao ultimo elemento é o primeiro elemento
         (*queue)->prev = elem;  //o mesmo aqui, o anterior ao primeiro elemento é o novo ultimo elemento
     }
-
-    return;
-
 }
 
 //------------------------------------------------------------------------------

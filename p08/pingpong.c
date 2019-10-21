@@ -104,6 +104,8 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     task->prev = NULL;
     //task->quantum = QUANTUM;
 
+    task->isDone = 0;
+
     // Referência para a tarefa main
     task->main = &task_main;
 
@@ -194,6 +196,8 @@ void task_exit (int exitCode) {
     printf ("task_exit: tarefa %d sendo encerrada\n", task_current->t_id) ;
     #endif
     exitCodeReturned = exitCode;
+    task_current->exitCode = exitCode;
+    task_current->isDone = 1;
 
     task_current->execution = systime() - task_current->execution;
     printf ("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", task_current->t_id,
@@ -367,9 +371,9 @@ void task_suspend (task_t *task, task_t **queue){
     }
     // Remoção da tarefa indicada da fila de prontos
 
-    //REMOVE DA QUEUE_READY?
+    //REMOVE DA QUEUE_READY
     if(queue != NULL){
-        aux = queue_remove((queue_t**)(queue_ready),(queue_t*)(task));
+        aux = queue_remove((queue_t**)(&task->ptr_queue),(queue_t*)(task));
         // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
         if(aux == NULL){
             printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
@@ -427,14 +431,28 @@ unsigned int systime (){
 
 
 int task_join (task_t *task) {
-    // suspende a tarefa atual, e joga o id da tarefa que a suspendeu
-    task_current->suspendedTaskMor = task->t_id;
-    // task_suspend retira da fila de prontas e adiciona na fila de suspensas, só criei a fila
-    task_suspend(task_current, &queue_suspended);
-    
 
+    if(task != NULL && task->isDone == 0) {
+        // suspende a tarefa atual, e joga o id da tarefa que a suspendeu
+        task_current->suspendedTaskMor = task->t_id;
+        // task_suspend retira da fila de prontas e adiciona na fila de suspensas, só criei a fila
+        task_suspend(task_current, (&queue_suspended));
+    } else if (task != NULL)
+        return task->exitCode;
 
-
-    //queue_append((queue_t**)&queue_suspended,(queue_t*) (task_current));
-    //return exitCodeReturned;
+    task_t *aux = queue_suspended->next;
+    if(task != NULL) {
+        // percorre a fila de suspensas
+        if (aux != queue_suspended) {
+            while (aux != queue_suspended) {
+                // e acorda todas as tarefas que foram suspensas por ela
+                if (aux->suspendedTaskMor == task->t_id)
+                    task_resume(aux);
+            }
+        } else              // se tiver só uma task na fila de suspensas
+        if (aux->suspendedTaskMor == task->t_id)
+            task_resume(aux);
+    return task->exitCode;
+    }else
+        return - 1;
 }
