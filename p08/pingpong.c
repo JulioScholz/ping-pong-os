@@ -10,7 +10,8 @@ p08 - início 20/10/2019
 #include "pingpong.h"
 
 task_t *task_current, task_main, task_dispacther;
-task_t *queue_ready = NULL;    
+task_t *queue_ready = NULL;
+task_t *queue_suspended = NULL;
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 
 struct sigaction action ; // estrutura que define um tratador de sinal (deve ser global ou static)
@@ -368,7 +369,7 @@ void task_suspend (task_t *task, task_t **queue){
 
     //REMOVE DA QUEUE_READY?
     if(queue != NULL){
-        aux = queue_remove((queue_t**)(&task->ptr_queue),(queue_t*)(task));
+        aux = queue_remove((queue_t**)(queue_ready),(queue_t*)(task));
         // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
         if(aux == NULL){
             printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
@@ -383,7 +384,7 @@ void task_suspend (task_t *task, task_t **queue){
     }
 }
 
-// acorda uma tarefa, retirando-a de sua fila atual, adicionando-a à fila de
+// acorda uma tarefa, retirando-a de sua fila suspended, adicionando-a à fila de
 // tarefas prontas ("ready queue") e mudando seu estado para "pronta"
 void task_resume (task_t *task){
     task_t* task_aux = NULL;
@@ -424,12 +425,16 @@ unsigned int systime (){
     return delta;
 }
 
-int task_join (task_t *task){
-    // suspende a tarefa atual
-    task_suspend(task_current, queue_ready*);
-    if(quantum == 1){
-        if(task != NULL)
-            return exitCodeReturned;
-        else
-            return -1;
+
+int task_join (task_t *task) {
+    // suspende a tarefa atual, e joga o id da tarefa que a suspendeu
+    task_current->suspendedTaskMor = task->t_id;
+    // task_suspend retira da fila de prontas e adiciona na fila de suspensas, só criei a fila
+    task_suspend(task_current, &queue_suspended);
+    
+
+
+
+    //queue_append((queue_t**)&queue_suspended,(queue_t*) (task_current));
+    //return exitCodeReturned;
 }

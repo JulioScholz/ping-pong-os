@@ -44,6 +44,8 @@ typedef struct task_t
   unsigned int act;
   int quantum;
 
+  int suspendedTaskMor;
+
   
 } task_t ;
 
