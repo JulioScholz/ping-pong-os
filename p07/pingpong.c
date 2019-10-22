@@ -43,22 +43,25 @@ void pingpong_init () {
 
     // Referência a si mesmo
     task_main.main = &task_main;
-    task_main.t_type = SYSTEM_TASK;
+    task_main.t_type = USER_TASK;
     task_main.act = 0;
+    task_main.priority_static = 0;
+    task_main.priority_dynamic = 0;
+    
 
     //task_main.quantum = QUANTUM;
-    task_main.t_type = USER_TASK;
+    //task_main.t_type = USER_TASK;
 
     queue_append((queue_t**)&queue_ready, (queue_t*)&task_main);
+    task_current = &task_main;
 
     // criação da tarefa dispatcher
     task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); 
     task_dispacther.t_type = SYSTEM_TASK;
     task_dispacther.act = 0;
     // A tarefa em execução é a main
-    task_current = &task_main;
+   
     
-
     //Inicialização de timer e sinais e demais tratamentos para os mesmos
     #ifdef DEBUG
     printf("Setando timers e sinais\n")
@@ -85,18 +88,19 @@ void pingpong_init () {
         exit (1) ;
     }
 
-
     #ifdef DEBUG
     printf("PingPongOS iniciado com êxito.\n");
     #endif
 
-    task_yield();
+    task_switch(&task_dispacther);
+    //task_yield();
 }
 
 // Cria uma nova tarefa. Retorna um ID> 0 ou erro.
 int task_create (task_t *task, void (*start_func)(void *), void *arg){
 
     char *stack = NULL ;
+    task->execution = systime();
     task->next = NULL;
     task->prev = NULL;
     //task->quantum = QUANTUM;
@@ -127,7 +131,7 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     // A nova tarefa recebe o contador, como id
     task->t_id = count_id;
 
-    task->execution = systime();
+    
     task->act = 0;
     task->processor = 0;
 
@@ -254,11 +258,11 @@ task_t *scheduler(){
             }
 
             //Proxima tarefa a ser comparada
-                task_aux = task_aux->next;
+            task_aux = task_aux->next;
 
         }while(task_aux != queue_ready);
     
-         task_aux = priority_task;
+        task_aux = priority_task;
     }
     #ifdef DEBUG
     printf("scheduler: Task %d foi escolhida pelo scheduler\n", task_aux->t_id);
@@ -298,7 +302,7 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
             //O quantum é resetado para o valor padrão do sistema:
             quantum = QUANTUM;
 
-            // a tarafa next é lançada  
+            // a tarefa next é lançada  
             task_switch (task_next) ; // transfere controle para a tarefa "next"
             // ... // ações após retornar da tarefa "next", se houverem
             
@@ -312,7 +316,7 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 // prontas ("ready queue")
 void task_yield () {
     
-    if (task_current->t_id > 1) {
+    if (task_current->t_id != 1) {
 
         queue_append((queue_t**)&queue_ready, (queue_t*)(task_current));
         task_current->ptr_queue = (queue_t**)(&queue_ready);
@@ -322,8 +326,9 @@ void task_yield () {
         printf("task_yield: Task %d foi adicionada a fila de prontos\n", task_current->t_id);
         #endif
     }
-    // Dispatcher assume o controle
+
     task_switch(&task_dispacther);
+   
 }
 
 void signal_handler(int singnum) {
@@ -332,7 +337,7 @@ void signal_handler(int singnum) {
     // então a cada chama do tratador seu quantum diminui
     //printf("TYPE: %s \n", USER_TASK);
     if (task_current->t_type == USER_TASK) {
-       // printf("Quantum: %d \n", quantum);
+
         if (quantum < 1) {
             #ifdef DEBUG
             printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
@@ -347,7 +352,7 @@ void signal_handler(int singnum) {
         }
         // relógio aumenta
         delta++;
-      //  printf("Delta %d \n", delta);
+      
         return;
     }
    
