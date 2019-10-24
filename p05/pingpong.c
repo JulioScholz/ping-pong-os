@@ -1,8 +1,10 @@
 /*
-Alunos: Júlio César Werner Scholz - 2023890
-        Juliana Rodrigues Viscenheski - 1508873
+Aluno: Júlio César Werner Scholz
+RA: 2023890
 Data de inicio: 03/09/2019
 Data de término 15/09/2019
+Sistemas operacionais - CSO30 - S73 - 2019/2
+Professor: Marco Aurélio Wehrmeister
 */
 
 #include "pingpong.h"
@@ -37,7 +39,7 @@ void pingpong_init () {
 
     // Referência a si mesmo
     task_main.main = &task_main;
-    task_main.t_type = SYSTEM_TASK;
+    task_main.t_type = USER_TASK;
 
     // criação da tarefa dispatcher
     task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher"); 
@@ -53,7 +55,6 @@ void pingpong_init () {
     action.sa_handler = signal_handler ;
     sigemptyset (&action.sa_mask) ;
     action.sa_flags = 0 ;
-
     if (sigaction (SIGALRM, &action, 0) < 0)
     {
         printf ("Erro em pingpong_init(): Erro em sigaction\n ") ;
@@ -215,25 +216,31 @@ task_t *scheduler(){
         int aux_prio_d;
 
         do{
-            //Envelhicento de tarefas, respeitando o range de prioridades
-            if (task_aux->priority_dynamic > -20)
-			    task_aux->priority_dynamic--;
-
+            
             aux_prio_d = task_aux->priority_dynamic;
-            // Critério: a tarefa prioritaria sempre será uma tarefa com prioridade maior que a atual     
-            if( priority_task->priority_dynamic > aux_prio_d )
-            {
+            // Critério: a tarefa prioritaria sempre será uma tarefa comprioridade menor ou igual a atual     
+            if( priority_task->priority_dynamic >  aux_prio_d ){
 
                 //Como a prioridade dinâica da tarefa seguinte é menor, ela é escolhida
                 priority_task = task_aux;
             }
-
             //Proxima tarefa a ser comparada
-                task_aux = task_aux->next;
+            task_aux = task_aux->next;
 
         }while(task_aux != queue_ready);
-    
-         task_aux = priority_task;
+
+        task_aux = queue_ready;
+ 
+        do{
+            //Envelhicento de tarefas, respeitando o range de prioridades
+            if (task_aux->priority_dynamic > -20){
+			    task_aux->priority_dynamic--;
+            }
+            task_aux = task_aux->next;
+
+        }while(task_aux != queue_ready);
+
+        task_aux = priority_task;
     }
     #ifdef DEBUG
     printf("scheduler: Task %d foi escolhida pelo scheduler\n", task_aux->t_id);
@@ -294,9 +301,6 @@ void task_yield () {
     }
     // Dispatcher assume o controle
     task_switch(&task_dispacther);
-     #ifdef DEBUG
-    printf("task_yield: Dispatcher assumindo o controle!\n");
-    #endif
 }
 
 void signal_handler(int singnum){
@@ -367,19 +371,14 @@ void task_setprio (task_t *task, int prio){
     if (prio < -20 || prio > 20)
         printf("Error on task_setprio: Impossível setar prioridade fora do range\n");
 
-    if (task != NULL)
-    {
+    if (task != NULL){
         task->priority_dynamic =prio;
         task->priority_static = prio;
     }
-    else
-    {
+    else{
         task_current->priority_dynamic = prio;
         task_current->priority_static = prio;
     }
-    #ifdef DEBUG
-    printf("on task_setprio: Prioridades setadas com sucessso\n");
-    #endif
     
 }
 
