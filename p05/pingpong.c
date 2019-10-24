@@ -1,6 +1,6 @@
 /*
-Aluno: Júlio César Werner Scholz
-RA: 2023890
+Alunos: Júlio César Werner Scholz - 2023890
+        Juliana Rodrigues Viscenheski - 1508873
 Data de inicio: 03/09/2019
 Data de término 15/09/2019
 Sistemas operacionais - CSO30 - S73 - 2019/2
