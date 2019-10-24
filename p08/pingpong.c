@@ -249,10 +249,7 @@ task_t *scheduler(){
         int aux_prio_d;
 
         do{
-            //Envelhicento de tarefas, respeitando o range de prioridades
-            if (task_aux->priority_dynamic > -20)
-			    task_aux->priority_dynamic--;
-
+            //Envelhicento de tarefas, respeitando o range de prioridade.
             aux_prio_d = task_aux->priority_dynamic;
             // Critério: a tarefa prioritaria sempre será uma tarefa comprioridade menor ou igual a atual     
             if( priority_task->priority_dynamic >  aux_prio_d ){
@@ -265,6 +262,16 @@ task_t *scheduler(){
                 task_aux = task_aux->next;
 
         }while(task_aux != queue_ready);
+	 
+	task_aux = queue_ready;
+        do{
+    		if (task_aux->priority_dynamic > -20)
+			task_aux->priority_dynamic--;
+                task_aux = task_aux->next;
+
+        }while(task_aux != queue_ready);
+	    
+	
     
          task_aux = priority_task;
     }
