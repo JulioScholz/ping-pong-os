@@ -12,7 +12,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1d511369-7b14-4115-820b-58b3c52f8081" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../p04/pingpong.c" beforeDir="false" afterPath="$PROJECT_DIR$/../p04/pingpong.c" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../p00/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/signal.c" beforeDir="false" afterPath="$PROJECT_DIR$/signal.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/timer.c" beforeDir="false" afterPath="$PROJECT_DIR$/timer.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../p08/cmake-build-debug/CMakeFiles/p08.dir/pingpong.c.o" beforeDir="false" afterPath="$PROJECT_DIR$/../p08/cmake-build-debug/CMakeFiles/p08.dir/pingpong.c.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../p08/cmake-build-debug/p08.exe" beforeDir="false" afterPath="$PROJECT_DIR$/../p08/cmake-build-debug/p08.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../p08/cmake-build-debug/p08.exe.stackdump" beforeDir="false" afterPath="$PROJECT_DIR$/../p08/cmake-build-debug/p08.exe.stackdump" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../p08/pingpong.c" beforeDir="false" afterPath="$PROJECT_DIR$/../p08/pingpong.c" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -77,6 +85,7 @@
       <option name="presentableId" value="Default" />
       <updated>1569673708983</updated>
       <workItem from="1569673710525" duration="595000" />
+      <workItem from="1571946990317" duration="997000" />
     </task>
     <servers />
   </component>
@@ -88,7 +97,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>

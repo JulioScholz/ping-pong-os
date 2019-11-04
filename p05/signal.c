@@ -1,6 +1,7 @@
 // Exemplo de definicao de tratador de sinal UNIX
 // Carlos Maziero, 2015
 
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -12,9 +13,9 @@
 
 // estrutura que define um tratador de sinal (deve ser global ou static)
 struct sigaction action ;
-
-/* função que tratará os sinais recebidos */
-void tratador (int signum)
+*/
+/* funï¿½ï¿½o que tratarï¿½ os sinais recebidos */
+/*void tratador (int signum)
 {
    printf ("Recebi o sinal %d\n", signum) ;
 }
@@ -31,6 +32,8 @@ int main (void)
       exit (1) ;
    }
 
-   /* laço vazio */
+   /* laï¿½o vazio */
+/*
    while (1) ;
 }
+*/

@@ -3,12 +3,12 @@ Alunos: Júlio César Werner Scholz - 2023890
         Juliana Rodrigues Viscenheski - 1508873
 Data de inicio: 03/09/2019
 Data de término 26/09/2019
-
 p08 - início 20/10/2019
 */
+
 #include "pingpong.h"
 
-task_t *task_current, task_main, task_dispacther;
+task_t *task_current, *task_main, *task_dispacther;
 task_t *queue_ready = NULL;
 task_t *queue_suspended = NULL;
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
@@ -20,6 +20,8 @@ unsigned int delta = 0;
 unsigned int timeInit = 0;
 unsigned int timeLast = 0;
 
+int exitCodeReturned;
+
 void dispatcher_body(void* arg);
 task_t* scheduler();
 void signal_handler(int singnum); // Função que trata os sinais recebidos
@@ -29,11 +31,13 @@ void pingpong_init () {
 
     //desativação do buffer da saida padrao (stdout), usado pela função printf
     setvbuf (stdout, 0, _IONBF, 0) ;
+    count_id = 0;
+    task_main = malloc(sizeof(task_t));
+    task_create(task_main, (void*)(dispatcher_body), "main"); //alt: qual seria a equivalência do dispatcher_body?
 
-    //task_create(&task_main, (void*)(dispatcher_body), "main"); //alt: qual seria a equivalência do dispatcher_body?
-
+    /*
     // Tarefa main possui id 0
-    task_main.t_id = 0;
+    task_main->t_id = 0;
     count_id = 1;
     task_main.state = READY;
 
@@ -43,29 +47,27 @@ void pingpong_init () {
 
     // Referência a si mesmo
     task_main.main = &task_main;
-    task_main.t_type = USER_TASK;
+    task_main.t_type = SYSTEM_TASK;
     task_main.act = 0;
-    task_main.priority_static = 0;
-    task_main.priority_dynamic = 0;
-
 
     //task_main.quantum = QUANTUM;
-    //task_main.t_type = USER_TASK;
+    task_main.t_type = USER_TASK;
 
     queue_append((queue_t**)&queue_ready, (queue_t*)&task_main);
-    task_current = &task_main;
-
+    task_main.ptr_queue = (queue_t**)&queue_ready;
+    */
     // criação da tarefa dispatcher
-    task_create(&task_dispacther,(void*)(dispatcher_body), "dispatcher");
-    task_dispacther.t_type = SYSTEM_TASK;
-    task_dispacther.act = 0;
+    task_dispacther = malloc(sizeof(task_t));
+    task_create(task_dispacther,(void*)(dispatcher_body), "dispatcher");
+    //task_dispacther.t_type = SYSTEM_TASK;
+    //task_dispacther.act = 0;
     // A tarefa em execução é a main
-
+    task_current = task_main;
 
     //Inicialização de timer e sinais e demais tratamentos para os mesmos
-    #ifdef DEBUG
+#ifdef DEBUG
     printf("Setando timers e sinais\n")
-    #endif
+#endif
     action.sa_handler = signal_handler;
     sigemptyset (&action.sa_mask) ;
     action.sa_flags = 0 ;
@@ -88,25 +90,26 @@ void pingpong_init () {
         exit (1) ;
     }
 
-    #ifdef DEBUG
-    printf("PingPongOS iniciado com êxito.\n");
-    #endif
 
-    task_switch(&task_dispacther);
-    //task_yield();
+#ifdef DEBUG
+    printf("PingPongOS iniciado com êxito.\n");
+#endif
+
+    task_switch(task_dispacther);
 }
 
 // Cria uma nova tarefa. Retorna um ID> 0 ou erro.
 int task_create (task_t *task, void (*start_func)(void *), void *arg){
 
     char *stack = NULL ;
-    task->execution = systime();
     task->next = NULL;
     task->prev = NULL;
     //task->quantum = QUANTUM;
 
+    task->isDone = 0;
+
     // Referência para a tarefa main
-    task->main = &task_main;
+    task->main = task_main;
 
     // Inicialização do contexto.
     getcontext(&(task->context));
@@ -131,7 +134,7 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     // A nova tarefa recebe o contador, como id
     task->t_id = count_id;
 
-
+    task->execution = systime();
     task->act = 0;
     task->processor = 0;
 
@@ -148,17 +151,18 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
 
     if(task->t_id >= 1){
         task->t_type = USER_TASK;
-        queue_append((queue_t**)&queue_ready,(queue_t*) (task));
-        task->ptr_queue = (queue_t**)&queue_ready;
+        queue_append((queue_t**)&queue_ready,(queue_t*)(task));
+        task->ptr_queue = (queue_t*)queue_ready;
+        printf("\n \n %d %d %d %d", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue);
 
-        #ifdef DEBUG
+#ifdef DEBUG
         printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
-        #endif
+#endif
     }
 
-    #ifdef DEBUG
-	printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
-    #endif
+#ifdef DEBUG
+    printf ("task_create: tarefa %d criada com sucesso\n", task->t_id);
+#endif
 
     return ((int)task->t_id);
 }
@@ -178,9 +182,9 @@ int task_switch (task_t *task){
     // a tarefa corrente passa a ser a nova tarefa recebida.
     task_current = task;
 
-    #ifdef DEBUG
+#ifdef DEBUG
     printf ("task_switch: trocando contexto %d -> %d\n", task_previous->t_id, task->t_id) ;
-    #endif
+#endif
     // troca de contextos
     if (swapcontext (&(task_previous->context), &(task_current->context)) < 0) {
         printf ("Error on task_switch: Troca de Contexto falhou! \n");
@@ -191,52 +195,55 @@ int task_switch (task_t *task){
 
 // Termina a tarefa corrente, indicando um valor de status encerramento
 void task_exit (int exitCode) {
-    #ifdef DEBUG
+#ifdef DEBUG
     printf ("task_exit: tarefa %d sendo encerrada\n", task_current->t_id) ;
-    #endif
+#endif
+    exitCodeReturned = exitCode;
+    task_current->exitCode = exitCode;
+    task_current->isDone = 1;
 
     task_current->execution = systime() - task_current->execution;
     printf ("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", task_current->t_id,
             task_current->execution, task_current->processor, task_current->act);
 
     //Se a tarefa corrente que está pra sair não for o dispatcher, o dispacther assume
-    if (task_current != &task_dispacther) {
-        task_switch(&task_dispacther);
+    if (task_current != task_dispacther) {
+        task_switch(task_dispacther);
     }
-    // Se o dispatcher for sair, o controle passa para a main
+        // Se o dispatcher for sair, o controle passa para a main
     else {
-        task_switch(&task_main);
+        task_switch(task_main);
     }
+
 }
 
 // retorna o identificador da tarefa corrente (main é 0)
 int task_id (){
-    #ifdef DEBUG
+#ifdef DEBUG
     printf ("task_id: ID da tarefa %d\n", task_current->t_id) ;
-    #endif
+#endif
     return (task_current->t_id);
 }
 
 // em função da implementação do dia 23/09, agora o algoritmo está mais para um PRIOp
-
 task_t *scheduler(){
-    #ifdef DEBUG
+#ifdef DEBUG
     printf("schdueler: Iniciando\n");
-    #endif
+#endif
     task_t *task_aux = NULL;
 
     // Se a fila estiver vazia
     if (queue_ready == NULL)
         return NULL;
 
-    // Se somente um elemento está contido na fila de prontas
-    // Este único elemento é escolhido;
+        // Se somente um elemento está contido na fila de prontas
+        // Este único elemento é escolhido;
     else if ( queue_ready == queue_ready->next )
-	{
-		task_aux = queue_ready;
-	}
+    {
+        task_aux = queue_ready;
+    }
 
-    //se a fila conter mais de um elemento
+        //se a fila conter mais de um elemento
     else{
         // ponteiro para a tarefa que será escolhida
         task_t* priority_task = queue_ready;
@@ -258,29 +265,24 @@ task_t *scheduler(){
             task_aux = task_aux->next;
 
         }while(task_aux != queue_ready);
-<<<<<<< HEAD
 
-        task_aux = priority_task;
-=======
-	 
-	task_aux = queue_ready;
+        task_aux = queue_ready;
         do{
-    		if (task_aux->priority_dynamic > -20)
-			task_aux->priority_dynamic--;
-                task_aux = task_aux->next;
+            if (task_aux->priority_dynamic > -20)
+                task_aux->priority_dynamic--;
+            task_aux = task_aux->next;
 
         }while(task_aux != queue_ready);
-	    
-	
-    
-         task_aux = priority_task;
->>>>>>> 7d34fbf9d9a3e4701f97276a95ff47dfbe8b5c26
-    }
-    #ifdef DEBUG
-    printf("scheduler: Task %d foi escolhida pelo scheduler\n", task_aux->t_id);
-    #endif
 
-     //como a tarefa foi escolhida sua pripridade dinâmica é resetada;
+
+
+        task_aux = priority_task;
+    }
+#ifdef DEBUG
+    printf("scheduler: Task %d foi escolhida pelo scheduler\n", task_aux->t_id);
+#endif
+
+    //como a tarefa foi escolhida sua pripridade dinâmica é resetada;
     task_aux->priority_dynamic =  task_aux->priority_static;
 
     return task_aux;
@@ -307,14 +309,14 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 
             // Remoção da proxima tarefa a ser executa da fila de prontos, por meio do casting para queue_t
             queue_remove((queue_t**)&queue_ready, (queue_t*)task_next);
-            #ifdef DEBUG
-             printf("dispatcher_body: Task %d foi removida da fila de prontos\n", task_next->t_id);
-            #endif
+#ifdef DEBUG
+            printf("dispatcher_body: Task %d foi removida da fila de prontos\n", task_next->t_id);
+#endif
             task_next->ptr_queue = NULL;
             //O quantum é resetado para o valor padrão do sistema:
             quantum = QUANTUM;
 
-            // a tarefa next é lançada
+            // a tarafa next é lançada
             task_switch (task_next) ; // transfere controle para a tarefa "next"
             // ... // ações após retornar da tarefa "next", se houverem
 
@@ -328,19 +330,18 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 // prontas ("ready queue")
 void task_yield () {
 
-    if (task_current->t_id != 1) {
+    if (task_current->t_id > 1) {
 
         queue_append((queue_t**)&queue_ready, (queue_t*)(task_current));
         task_current->ptr_queue = (queue_t**)(&queue_ready);
         task_current->state = READY;
 
-        #ifdef DEBUG
+#ifdef DEBUG
         printf("task_yield: Task %d foi adicionada a fila de prontos\n", task_current->t_id);
-        #endif
+#endif
     }
-
-    task_switch(&task_dispacther);
-
+    // Dispatcher assume o controle
+    task_switch(task_dispacther);
 }
 
 void signal_handler(int singnum) {
@@ -349,11 +350,11 @@ void signal_handler(int singnum) {
     // então a cada chama do tratador seu quantum diminui
     //printf("TYPE: %s \n", USER_TASK);
     if (task_current->t_type == USER_TASK) {
-
+        // printf("Quantum: %d \n", quantum);
         if (quantum < 1) {
-            #ifdef DEBUG
+#ifdef DEBUG
             printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
-            #endif
+#endif
             task_current->act++;
             // o tempo de processador será o tempo total (delta corrido) menos o momento no qual a última tarefa foi finalizada
             task_current->processor += systime() - timeLast;
@@ -364,7 +365,7 @@ void signal_handler(int singnum) {
         }
         // relógio aumenta
         delta++;
-
+        //  printf("Delta %d \n", delta);
         return;
     }
 
@@ -379,10 +380,12 @@ void task_suspend (task_t *task, task_t **queue){
         task = task_current;
     }
     // Remoção da tarefa indicada da fila de prontos
+    aux = queue_remove(&(task->ptr_queue),(queue_t*)(task));
 
-    //REMOVE DA QUEUE_READY?
+    //REMOVE DA QUEUE_READY
     if(queue != NULL){
-        aux = queue_remove((queue_t**)(&queue_ready),(queue_t*)(task));
+        //aux = queue_remove((queue_t**)(&queue_ready),(queue_t*)(task));
+
         // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
         if(aux == NULL){
             printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
@@ -397,7 +400,7 @@ void task_suspend (task_t *task, task_t **queue){
     }
 }
 
-// acorda uma tarefa, retirando-a de sua fila atual, adicionando-a à fila de
+// acorda uma tarefa, retirando-a de sua fila suspended, adicionando-a à fila de
 // tarefas prontas ("ready queue") e mudando seu estado para "pronta"
 void task_resume (task_t *task){
     task_t* task_aux = NULL;
@@ -438,6 +441,7 @@ unsigned int systime (){
     return delta;
 }
 
+
 int task_join (task_t *task) {
 
     if(task != NULL && task->isDone == 0) {
@@ -449,6 +453,7 @@ int task_join (task_t *task) {
         return task->exitCode;
 
     task_t *aux = queue_suspended->next;
+
     if(task != NULL) {
         // percorre a fila de suspensas
         if (aux != queue_suspended) {
@@ -460,7 +465,7 @@ int task_join (task_t *task) {
         } else              // se tiver só uma task na fila de suspensas
         if (aux->suspendedTaskMor == task->t_id)
             task_resume(aux);
-    return task->exitCode;
+        return task->exitCode;
     }else
         return - 1;
 }

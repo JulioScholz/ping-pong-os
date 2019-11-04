@@ -11,6 +11,7 @@
 #warning Este codigo foi planejado para ambientes UNIX (LInux, *BSD, MacOS). A compilacao e execucao em outros ambientes e responsabilidade do usuario.
 #endif
 
+/*
 // estrutura que define um tratador de sinal (deve ser global ou static)
 struct sigaction action ;
 
@@ -51,3 +52,4 @@ int main ()
   // laco vazio
   while (1) ;
 }
+*/

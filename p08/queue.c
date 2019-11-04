@@ -40,8 +40,21 @@ void queue_append (queue_t **queue, queue_t *elem) {
     else{
         //queue_t *ultimo_elemento = NULL;
         //ultimo_elemento = (*queue)->prev;
+        /*
+        queue_t *auxiliar = NULL;
+        auxiliar = (*queue)->next;
+        while(auxiliar != elem){
+            if(auxiliar == (*queue)){ //se chegou ao inicio da fila
+                elem->prev = auxiliar->prev;
+                auxiliar->prev->next = elem;
+                elem->next = auxiliar;
+                auxiliar->prev = elem;
 
-        elem->prev = (*queue)->prev; // onovo ultimo elemento tem como anterior o antigo ultimo elemento
+            }
+            auxiliar = auxiliar->next;
+        }
+         */
+        elem->prev = (*queue)->prev; // o novo ultimo elemento tem como anterior o antigo ultimo elemento
         (*queue)->prev->next = elem; // o antigo ultimo elemento recebe como proximo o novo ultimo elemento
         elem->next = *queue;    //fila circular, ou seja o proximo ao ultimo elemento é o primeiro elemento
         (*queue)->prev = elem;  //o mesmo aqui, o anterior ao primeiro elemento é o novo ultimo elemento
