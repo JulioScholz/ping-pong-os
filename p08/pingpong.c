@@ -95,13 +95,14 @@ void pingpong_init () {
     printf("PingPongOS iniciado com êxito.\n");
 #endif
 
-    task_switch(task_dispacther);
+    //task_switch(task_dispacther);
 }
 
 // Cria uma nova tarefa. Retorna um ID> 0 ou erro.
 int task_create (task_t *task, void (*start_func)(void *), void *arg){
 
-    char *stack = NULL ;
+    char *stack = NULL;
+
     task->next = NULL;
     task->prev = NULL;
     //task->quantum = QUANTUM;
@@ -331,9 +332,8 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 void task_yield () {
 
     if (task_current->t_id > 1) {
-
         queue_append((queue_t**)&queue_ready, (queue_t*)(task_current));
-        task_current->ptr_queue = (queue_t**)(&queue_ready);
+        task_current->ptr_queue = (queue_t*)(&queue_ready);
         task_current->state = READY;
 
 #ifdef DEBUG
@@ -380,7 +380,8 @@ void task_suspend (task_t *task, task_t **queue){
         task = task_current;
     }
     // Remoção da tarefa indicada da fila de prontos
-    aux = queue_remove(&(task->ptr_queue),(queue_t*)(task));
+    printf("\n \n %d %d %d %d", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue);
+    aux = queue_remove((task->ptr_queue),(queue_t*)(task));
 
     //REMOVE DA QUEUE_READY
     if(queue != NULL){
@@ -441,7 +442,6 @@ unsigned int systime (){
     return delta;
 }
 
-
 int task_join (task_t *task) {
 
     if(task != NULL && task->isDone == 0) {
@@ -449,6 +449,7 @@ int task_join (task_t *task) {
         task_current->suspendedTaskMor = task->t_id;
         // task_suspend retira da fila de prontas e adiciona na fila de suspensas, só criei a fila
         task_suspend(task_current, (&queue_suspended));
+        task_yield();
     } else if (task != NULL)
         return task->exitCode;
 
