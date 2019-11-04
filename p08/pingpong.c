@@ -10,7 +10,7 @@ p08 - início 20/10/2019
 
 task_t *task_current, *task_main, *task_dispacther;
 task_t *queue_ready = NULL;
-task_t *queue_suspended = NULL;
+//task_t *queue_suspended = NULL;
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 
 struct sigaction action ; // estrutura que define um tratador de sinal (deve ser global ou static)
@@ -149,12 +149,13 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     task->priority_static = 0;
     task->priority_dynamic = 0;
     task->t_type = USER_TASK;
+    task->ptr_queue_suspended =NULL;
 
     if(task->t_id >= 1){
         task->t_type = USER_TASK;
         queue_append((queue_t**)&queue_ready,(queue_t*)(task));
         task->ptr_queue = (queue_t*)queue_ready;
-        printf("\n \n %d %d %d %d", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue);
+        //printf("\n \n %d %d %d %d", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue);
 
 #ifdef DEBUG
         printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
@@ -380,8 +381,8 @@ void task_suspend (task_t *task, task_t **queue){
         task = task_current;
     }
     // Remoção da tarefa indicada da fila de prontos
-    printf("\n \n %d %d %d %d", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue);
-    aux = queue_remove((task->ptr_queue),(queue_t*)(task));
+   //printf("\n \n %d %d %d %d", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue);
+    aux = queue_remove((queue_t**)(task->ptr_queue),(queue_t*)(task));
 
     //REMOVE DA QUEUE_READY
     if(queue != NULL){
@@ -396,7 +397,7 @@ void task_suspend (task_t *task, task_t **queue){
             task->state = SUSPENDED;
             // Inclusão da tarefa na fila de suspensos
             queue_append((queue_t**)(&queue),(queue_t*)(task));
-            task->ptr_queue = (queue_t**)(&queue);
+            //task->ptr_queue = (queue_t**)(&queue);
         }
     }
 }
@@ -405,10 +406,10 @@ void task_suspend (task_t *task, task_t **queue){
 // tarefas prontas ("ready queue") e mudando seu estado para "pronta"
 void task_resume (task_t *task){
     task_t* task_aux = NULL;
-    task_aux = (task_t*)queue_remove((queue_t**)(&task->ptr_queue),(queue_t*)(&task));
+    task_aux = (task_t*)queue_remove((queue_t**)(&task->ptr_queue_suspended),(queue_t*)(&task));
     task_aux->state = READY;
-    queue_append((queue_t**)(&queue_ready),(queue_t*)(task_aux));
-    task->ptr_queue = (queue_t**)(&queue_ready);
+    queue_append((queue_t**)(&task->ptr_queue),(queue_t*)(task_aux));
+    //task->ptr_queue = (queue_t**)(&queue_ready);
 }
 
 // recolhe a prioridade estática da tarefa task
@@ -448,17 +449,18 @@ int task_join (task_t *task) {
         // suspende a tarefa atual, e joga o id da tarefa que a suspendeu
         task_current->suspendedTaskMor = task->t_id;
         // task_suspend retira da fila de prontas e adiciona na fila de suspensas, só criei a fila
-        task_suspend(task_current, (&queue_suspended));
+        task_suspend(task_current, (task_t**)(&task->ptr_queue_suspended));
         task_yield();
-    } else if (task != NULL)
+    } 
+    else if (task != NULL){
         return task->exitCode;
-
-    task_t *aux = queue_suspended->next;
+    }
+    task_t *aux = (task_t*)task->ptr_queue_suspended->next;
 
     if(task != NULL) {
         // percorre a fila de suspensas
-        if (aux != queue_suspended) {
-            while (aux != queue_suspended) {
+        if (aux != (task_t*)task->ptr_queue_suspended) {
+            while (aux != (task_t*)task->ptr_queue_suspended) {
                 // e acorda todas as tarefas que foram suspensas por ela
                 if (aux->suspendedTaskMor == task->t_id)
                     task_resume(aux);
@@ -467,6 +469,7 @@ int task_join (task_t *task) {
         if (aux->suspendedTaskMor == task->t_id)
             task_resume(aux);
         return task->exitCode;
-    }else
+    }
+    else
         return - 1;
 }
