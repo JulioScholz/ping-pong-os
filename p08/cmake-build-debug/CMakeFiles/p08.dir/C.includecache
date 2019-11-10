@@ -20,6 +20,14 @@ sys/time.h
 signal.h
 -
 
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p08/pingpong-join.c
+stdio.h
+-
+stdlib.h
+-
+pingpong.h
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p08/pingpong.h
+
 /cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p08/pingpong.c
 pingpong.h
 /cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p08/pingpong.h

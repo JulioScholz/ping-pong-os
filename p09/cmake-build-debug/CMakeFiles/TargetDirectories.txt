@@ -1,0 +1,3 @@
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p09/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p09/cmake-build-debug/CMakeFiles/p09.dir
+/cygdrive/c/Users/juvis/Desktop/UTFPR/Engenharia/Sistemas Operacionais/Novo clone/ping-pong-os/p09/cmake-build-debug/CMakeFiles/edit_cache.dir
