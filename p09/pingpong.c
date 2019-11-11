@@ -132,7 +132,7 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     makecontext (&(task->context), (void*)(*start_func), 1, arg);
 
     // A nova tarefa recebe o contador, como id
-    printf("%d count \n", count_id);
+   // printf("%ld count \n", count_id);
     task->t_id = count_id;
 
     task->execution = systime();
@@ -155,7 +155,7 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
         task->t_type = USER_TASK;
         queue_append((queue_t**)&queue_ready,(queue_t*)(task));
         task->ptr_queue = (queue_t*)queue_ready;
-        printf("\n task_create \n %d %d %d %d %d \n", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue, task->t_id);
+      //  printf("\n task_create \n %ld %d %d %d %d \n", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue, task->t_id);
 
 #ifdef DEBUG
         printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
@@ -327,13 +327,19 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
     }
 
     task_current->time_sleep --;        // diminui o tempo que ele está ativo
+    if(queue_sleep != NULL){
+        task_t *aux = (task_t*)queue_sleep, *task_wake_up = NULL;
+        // percorre a fila de tarefas adormecidas 
+        do{
+            // e acorda todas as tarefas que já podem ser acordadas
+            if (systime () > aux->time_sleep){
+                task_wake_up = (task_t *)(queue_remove ((queue_t**) &queue_sleep, (queue_t *) aux));
+                queue_append((queue_t **) &queue_ready,(queue_t *) task_wake_up);
+            }
 
-    task_t *aux = (task_t*)queue_sleep->next;
-    // percorre a fila de tarefas adormecidas
-    while (aux != (task_t*)queue_sleep) {
-        // e acorda todas as tarefas que já podem ser acordadas
-        if (aux->time_sleep == 0)
-            task_resume(aux);
+            
+            aux = aux->next;
+        }while (aux != (task_t*)queue_sleep);
     }
 
     task_exit(0) ; // encerra a tarefa dispatcher
@@ -392,7 +398,7 @@ void task_suspend (task_t *task, task_t **queue){
         task = task_current;
     }
     // Remoção da tarefa indicada da fila de prontos
-    printf("\n \n %d %d %d %d %d\n ", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue, task->t_id);
+    //printf("\n \n %d %d %d %d %d\n ", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue, task->t_id);
     aux = queue_remove((queue_t**)(task->ptr_queue),(queue_t*)(task));
 
     //REMOVE DA QUEUE_READY
@@ -486,8 +492,12 @@ int task_join (task_t *task) {
 }
 
 void task_sleep (int t){
-    queue_remove((queue_t**)(queue_ready),(queue_t*)(task_current));    // remove a tarefa da fila de prontos
+    printf("\nromvendo\n");
+    //queue_remove((queue_t**)(&queue_ready),(queue_t*)(task_current));    // remove a tarefa da fila de prontos
+    printf("\nadicionando\n");
+    task_current->state = SLEEP;	
     queue_append((queue_t**)(&queue_sleep),(queue_t*)(task_current));               // adiciona a fila de tarefas adormecidas
-    task_current->time_sleep = t;                   // insere o tempo de dormência
+    printf("\nfoi\n");
+    task_current->time_sleep = systime() + t*1000;                   // insere o tempo de dormência
     task_switch(task_dispacther);                       // devolve o controle ao dispatcher
 }
