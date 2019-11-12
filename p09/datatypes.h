@@ -13,6 +13,7 @@
 #define READY 'r'
 #define FINALIZED 'f'
 #define IS_RUNNIG 'i'
+#define SLEEP 'd'
 #define SYSTEM_TASK 0
 #define USER_TASK 1
 #define QUANTUM 20
@@ -30,7 +31,7 @@ typedef struct task_t
   struct task_t *prev ;
   struct task_t *next ;
   struct task_t *main ;
-  struct queue_t *ptr_queue; //referência para  a fila em que a tarefa está inserida
+  struct queue_t **ptr_queue; //referência para  a fila em que a tarefa está inserida
   struct queue_t *ptr_queue_suspended;
  	char state;                 //estado atual da tarefa
   int t_id ;              //Inteiro para identificação da tarefa

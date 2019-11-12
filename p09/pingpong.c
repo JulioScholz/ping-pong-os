@@ -5,7 +5,6 @@ Data de inicio: 03/09/2019
 Data de término 26/09/2019
 p09 - início 10/11/2019
 */
-
 #include "pingpong.h"
 
 task_t *task_current, *task_main, *task_dispacther;
@@ -32,40 +31,18 @@ void pingpong_init () {
     setvbuf (stdout, 0, _IONBF, 0) ;
     count_id = 0;
     task_main = malloc(sizeof(task_t));
-    task_create(task_main, (void*)(dispatcher_body), "main"); //alt: qual seria a equivalência do dispatcher_body?
+    task_create(task_main, 0, "main"); //alt: qual seria a equivalência do dispatcher_body?
 
-    /*
-    // Tarefa main possui id 0
-    task_main->t_id = 0;
-    count_id = 1;
-    task_main.state = READY;
-
-    //Inicialização do encademanto das tarefas
-    task_main.prev = NULL;
-    task_main.next = NULL;
-
-    // Referência a si mesmo
-    task_main.main = &task_main;
-    task_main.t_type = SYSTEM_TASK;
-    task_main.act = 0;
-
-    //task_main.quantum = QUANTUM;
-    task_main.t_type = USER_TASK;
-
-    queue_append((queue_t**)&queue_ready, (queue_t*)&task_main);
-    task_main.ptr_queue = (queue_t**)&queue_ready;
-    */
     // criação da tarefa dispatcher
     task_dispacther = malloc(sizeof(task_t));
     task_create(task_dispacther,(void*)(dispatcher_body), "dispatcher");
-    //task_dispacther.t_type = SYSTEM_TASK;
-    //task_dispacther.act = 0;
+
     // A tarefa em execução é a main
     task_current = task_main;
 
     //Inicialização de timer e sinais e demais tratamentos para os mesmos
 #ifdef DEBUG
-    printf("Setando timers e sinais\n")
+    printf("Setando timers e sinais\n");
 #endif
     action.sa_handler = signal_handler;
     sigemptyset (&action.sa_mask) ;
@@ -95,6 +72,7 @@ void pingpong_init () {
 #endif
 
     //task_switch(task_dispacther);
+    task_yield();
 }
 
 // Cria uma nova tarefa. Retorna um ID> 0 ou erro.
@@ -151,11 +129,10 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
     task->t_type = USER_TASK;
     task->ptr_queue_suspended =NULL;
 
-    if(task->t_id >= 0){
+    if(task->t_id != 1){
         task->t_type = USER_TASK;
-        queue_append((queue_t**)&queue_ready,(queue_t*)(task));
-        task->ptr_queue = (queue_t*)queue_ready;
-      //  printf("\n task_create \n %ld %d %d %d %d \n", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue, task->t_id);
+        queue_append((queue_t**)(&queue_ready),(queue_t*)(task));
+        task->ptr_queue = (queue_t**)(&queue_ready);
 
 #ifdef DEBUG
         printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
@@ -326,19 +303,26 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
         size_of_queue = (int)queue_size((queue_t*)queue_ready);
     }
 
-    task_current->time_sleep --;        // diminui o tempo que ele está ativo
+    //task_current->time_sleep --;        // diminui o tempo que ele está ativo
     if(queue_sleep != NULL){
         task_t *aux = (task_t*)queue_sleep, *task_wake_up = NULL;
         // percorre a fila de tarefas adormecidas 
         do{
             // e acorda todas as tarefas que já podem ser acordadas
             if (systime () > aux->time_sleep){
+                printf("VAMO ACORDAR\n");
                 task_wake_up = (task_t *)(queue_remove ((queue_t**) &queue_sleep, (queue_t *) aux));
                 queue_append((queue_t **) &queue_ready,(queue_t *) task_wake_up);
+                printf(" ACORDOU\n");
+                task_wake_up->ptr_queue = (queue_t**)(&queue_ready);
+                
             }
-
-            
-            aux = aux->next;
+            if(queue_size((queue_t*)queue_sleep)>0){
+                aux = aux->next;
+            }
+            else{
+                aux = (task_t*)queue_sleep;
+            }
         }while (aux != (task_t*)queue_sleep);
     }
 
@@ -351,7 +335,7 @@ void task_yield () {
 
     if (task_current->t_id > 1) {
         queue_append((queue_t**)&queue_ready, (queue_t*)(task_current));
-        task_current->ptr_queue = (queue_t*)(&queue_ready);
+        task_current->ptr_queue =(queue_t**) (&queue_ready);
         task_current->state = READY;
 
 #ifdef DEBUG
@@ -371,7 +355,7 @@ void signal_handler(int singnum) {
         // printf("Quantum: %d \n", quantum);
         if (quantum < 1) {
 #ifdef DEBUG
-            printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_corrente->tid);
+            printf("signal_handler: Tarefa chegou ao final do quantum: %d\n", task_current->t_id);
 #endif
             task_current->act++;
             // o tempo de processador será o tempo total (delta corrido) menos o momento no qual a última tarefa foi finalizada
@@ -391,42 +375,45 @@ void signal_handler(int singnum) {
 
 // suspende uma tarefa, retirando-a de sua fila atual, adicionando-a à fila
 // queue e mudando seu estado para "suspensa"; usa a tarefa atual se task==NULL
-void task_suspend (task_t *task, task_t **queue){
-    queue_t *aux = NULL;
+void task_suspend(task_t *task, task_t **queue)
+{
+	#ifdef DEBUG
+	printf ("task_suspend: inicio\n");
+	#endif
 
-    if(task == NULL){
-        task = task_current;
-    }
-    // Remoção da tarefa indicada da fila de prontos
-    //printf("\n \n %d %d %d %d %d\n ", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue, task->t_id);
-    aux = queue_remove((queue_t**)(task->ptr_queue),(queue_t*)(task));
+	/* Ha uma task passada como parametro? */
+	if (!task)
+		task = task_current;
+	/* Ha uma queue passada como parametro? */
+	if (!queue)
+		return;
 
-    //REMOVE DA QUEUE_READY
-    if(queue != NULL){
-        //aux = queue_remove((queue_t**)(&queue_ready),(queue_t*)(task));
+	#ifdef DEBUG
+	printf ("task_suspend: tarefa %d sendo suspensa\n", task->t_id);
+	#endif
 
-        // Se o retorno for Nulo a tarefa nao existe na fila de prontos, logo deve apontar erro
-        if(aux == NULL){
-            printf("Error on task_suspend: A tarefa nao pode ser removida da fila de prontos!");
-        }
-        else{
-            // Mudança de estado para suspenso
-            task->state = SUSPENDED;
-            // Inclusão da tarefa na fila de suspensos
-            queue_append((queue_t**)(&queue),(queue_t*)(task));
-            //task->ptr_queue = (queue_t**)(&queue);
-        }
-    }
+	task->state = SUSPENDED;
+
+	/* Troca a task de fila (atual -> queue) */
+	//queue_remove((queue_t**)task->ptr_queue, (queue_t*)task);
+	queue_append((queue_t**)queue, (queue_t*)task);
+	task->ptr_queue =(queue_t**) queue;
+
+	task_switch(task_dispacther);
+
+	#ifdef DEBUG
+	printf ("task_suspend: tarefa %d saindo da suspensao\n", task->t_id);
+	#endif
 }
 
 // acorda uma tarefa, retirando-a de sua fila suspended, adicionando-a à fila de
 // tarefas prontas ("ready queue") e mudando seu estado para "pronta"
 void task_resume (task_t *task){
     task_t* task_aux = NULL;
-    task_aux = (task_t*)queue_remove((queue_t**)(&task->ptr_queue_suspended),(queue_t*)(&task));
+    task_aux = (task_t*)queue_remove((queue_t**)task->ptr_queue,(queue_t*)(&task));
     task_aux->state = READY;
-    queue_append((queue_t**)(&task->ptr_queue),(queue_t*)(task_aux));
-    //task->ptr_queue = (queue_t**)(&queue_ready);
+    queue_append((queue_t**)&queue_ready,(queue_t*)(task_aux));
+    task->ptr_queue =(queue_t**) &queue_ready;
 }
 
 // recolhe a prioridade estática da tarefa task
@@ -492,12 +479,10 @@ int task_join (task_t *task) {
 }
 
 void task_sleep (int t){
-    printf("\nromvendo\n");
     //queue_remove((queue_t**)(&queue_ready),(queue_t*)(task_current));    // remove a tarefa da fila de prontos
-    printf("\nadicionando\n");
     task_current->state = SLEEP;	
-    queue_append((queue_t**)(&queue_sleep),(queue_t*)(task_current));               // adiciona a fila de tarefas adormecidas
-    printf("\nfoi\n");
+   // queue_append((queue_t**)(&queue_sleep),(queue_t*)(task_current));               // adiciona a fila de tarefas adormecidas
+    task_suspend(task_current, &queue_sleep);
     task_current->time_sleep = systime() + t*1000;                   // insere o tempo de dormência
     task_switch(task_dispacther);                       // devolve o controle ao dispatcher
 }
