@@ -32,7 +32,7 @@ typedef struct task_t
   struct task_t *next ;
   struct task_t *main ;
   struct queue_t **ptr_queue; //referência para  a fila em que a tarefa está inserida
-  struct queue_t *ptr_queue_suspended;
+  struct task_t *ptr_queue_suspended;
  	char state;                 //estado atual da tarefa
   int t_id ;              //Inteiro para identificação da tarefa
   ucontext_t context;     // contexto da tarefa 
@@ -41,10 +41,10 @@ typedef struct task_t
 
   short int t_type; // Tipo de tarefa, se é do sistema(0) ou de usuário(1)
 
-  unsigned int execution;
+  unsigned int execution; 
   unsigned int processor;
   unsigned int act;
-  int quantum;
+ 
 
   int suspendedTaskMor;
   int exitCode;
