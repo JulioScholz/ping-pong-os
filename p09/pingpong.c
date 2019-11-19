@@ -11,6 +11,7 @@ p09 - início 10/11/2019
 task_t *task_current, *task_main, *task_dispacther;
 task_t *queue_ready = NULL;
 task_t *queue_sleep = NULL;
+task_t *queue_suspend = NULL;
 unsigned long int count_id;  //Como a primera task (main) é 0 a póxima tarefa terá o id 1
 struct sigaction action ; // estrutura que define um tratador de sinal (deve ser global ou static)
 struct itimerval timer; // estrutura de inicialização to timer
@@ -155,7 +156,7 @@ int task_create (task_t *task, void (*start_func)(void *), void *arg){
         task->t_type = USER_TASK;
         queue_append((queue_t**)&queue_ready,(queue_t*)(task));
         task->ptr_queue = (queue_t*)queue_ready;
-      //  printf("\n task_create \n %ld %d %d %d %d \n", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue, task->t_id);
+        printf("\n task_create \n %ld %d %d %d %d \n", queue_ready, &queue_ready, task->ptr_queue, &task->ptr_queue, task->t_id);
 
 #ifdef DEBUG
         printf("task_create: Task %d foi adicionada a fila de prontos\n", task->t_id);
@@ -412,8 +413,15 @@ void task_suspend (task_t *task, task_t **queue){
         else{
             // Mudança de estado para suspenso
             task->state = SUSPENDED;
+            printf("entrou no else \n");
             // Inclusão da tarefa na fila de suspensos
             queue_append((queue_t**)(&queue),(queue_t*)(task));
+            //queue_append((queue_t**)&queue_suspend,(queue_t*)(task));
+            //printf("adicionou\n");
+            //queue = (task_t**)queue_suspend;
+            //printf("deu boa");
+            //queue_append((queue_t**)&queue_suspend,(queue_t*)(task));
+            //task->ptr_queue_suspended = (queue_t*)queue_suspend;
             //task->ptr_queue = (queue_t**)(&queue);
         }
     }
@@ -472,6 +480,7 @@ int task_join (task_t *task) {
     else if (task != NULL){
         return task->exitCode;
     }
+    printf("morreu aqui");
     task_t *aux = (task_t*)task->ptr_queue_suspended->next;
 
     if(task != NULL) {
@@ -492,7 +501,7 @@ int task_join (task_t *task) {
 }
 
 void task_sleep (int t){
-    printf("\nromvendo\n");
+    //printf("\nremovendo\n");
     //queue_remove((queue_t**)(&queue_ready),(queue_t*)(task_current));    // remove a tarefa da fila de prontos
     printf("\nadicionando\n");
     task_current->state = SLEEP;	

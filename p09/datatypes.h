@@ -6,7 +6,7 @@
 
 #ifndef __DATATYPES__
 #define __DATATYPES__
-
+#define SLEEP 'd'
 #define STACKSIZE 32768	
 
 #define SUSPENDED 's'

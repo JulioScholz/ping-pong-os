@@ -17,6 +17,8 @@ Data de término 01/09/2019
 
 void queue_append (queue_t **queue, queue_t *elem) {
 
+    //printf("entrou no append\n ");
+
     if (queue == NULL){
         printf("Error on queue_append: Fila nao existe!\n");
         return;
@@ -30,7 +32,7 @@ void queue_append (queue_t **queue, queue_t *elem) {
         return;
     }
 
-    //inserção de um elemento em uma fila circular fazia
+    //inserção de um elemento em uma fila circular vazia
     if(*queue == NULL){
         *queue = elem;
         elem->next = elem;
@@ -54,6 +56,7 @@ void queue_append (queue_t **queue, queue_t *elem) {
             auxiliar = auxiliar->next;
         }
          */
+        //printf("fila nao ta vazia \n");
         elem->prev = (*queue)->prev; // o novo ultimo elemento tem como anterior o antigo ultimo elemento
         (*queue)->prev->next = elem; // o antigo ultimo elemento recebe como proximo o novo ultimo elemento
         elem->next = *queue;    //fila circular, ou seja o proximo ao ultimo elemento é o primeiro elemento
@@ -98,8 +101,6 @@ queue_t *queue_remove (queue_t **queue, queue_t *elem) {
     }
 
     auxiliar = NULL;
-
-    
 
     //necessário verificar se a fila contem somente um elemento
     //caso positivo é necessário um tratamento diferete
