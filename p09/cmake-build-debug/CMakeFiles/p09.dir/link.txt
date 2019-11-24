@@ -1,0 +1,1 @@
+/usr/bin/cc -g  -Wl,--enable-auto-import CMakeFiles/p09.dir/queue.c.o CMakeFiles/p09.dir/pingpong-sleep.c.o CMakeFiles/p09.dir/pingpong.c.o  -o p09.exe -Wl,--out-implib,libp09.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
