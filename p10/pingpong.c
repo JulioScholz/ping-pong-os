@@ -3,7 +3,7 @@ Alunos: Júlio César Werner Scholz - 2023890
         Juliana Rodrigues Viscenheski - 1508873
 Data de inicio: 03/09/2019
 Data de término 26/09/2019
-p09 - início 10/11/2019
+p10 - início 24/11/2019
 */
 #include "pingpong.h"
 
@@ -524,4 +524,87 @@ void task_sleep (int t){
         task_suspend(task_current,&queue_sleep);
     }
     return;
+}
+
+// cria um semáforo com valor inicial "value"
+int sem_create (semaphore_t *s, int value){
+
+    if (s != NULL) {
+        s->count_sem = value;
+        s->queue_sem = NULL;
+        return 0;
+    } else {
+        printf("Semaforo vazio na função sem_create");
+        return -1;
+    }
+}
+
+// requisita o semáforo
+int sem_down (semaphore_t *s){
+
+    // acredito que para retornar, temos que verificar se o semáforo ainda está válido (não foi destruído)
+    // não sei muito bem como fazer isso ainda
+    if (s != NULL) {
+        if (s->count_sem < 0) {              // se o contador do semáforo for negativo
+            task_current->state = SUSPENDED;
+            task_suspend(task_current, &queue_sleep);            // a tarefa atual é suspensa
+            queue_append((queue_t **) &(s->queue_sem),
+                         (queue_t *) task_current);       // e adicionada ao fim da fila do semáforo
+            task_switch(task_dispacther);               // a execução volta ao dispatcher
+        } else {
+            printf("Decrementa semáforo");
+            s->count_sem--;
+            return 0;
+        }
+    } else {
+        printf("Semaforo vazio na sem_down");
+        return -1;
+    }
+}
+
+// libera o semáforo
+int sem_up (semaphore_t *s) {
+
+    if (s != NULL) {
+        if (s->queue_sem != NULL) {      // se existir tarefa na fila do semáforo, ela deve ser acordada
+            task_resume((task_t *) s->queue_sem);             // acorda a coitada
+            queue_remove((queue_t**)s->queue_sem, (queue_t*)task_current);              // remove da fila do semáforo
+            queue_append((queue_t **) &queue_ready,
+                         (queue_t *) s->queue_sem);          // adiciona na fila de prontos de novo
+        }
+        else if (s->queue_sem == NULL){
+            s->count_sem++;                                     // não entendi muito bem porque isso precisa ser feito
+        } else
+            printf("Fila do semaforo ta vazia na sem-up");
+
+        return 0;
+
+    } else {
+        printf("Semaforo ta vazio na função sem_up");
+        return -1;
+    }
+}
+
+// destroi o semáforo, liberando as tarefas bloqueadas
+int sem_destroy (semaphore_t *s){
+
+    if (s != NULL){
+        if (s->queue_sem != NULL){}
+        task_t* aux = 0;
+        while (s->queue_sem != NULL) {
+            aux = (task_t *) s->queue_sem->next;
+            queue_remove((queue_t **) s->queue_sem, (queue_t *) aux);              // remove da fila do semáforo
+            queue_append((queue_t **) &queue_ready, (queue_t *) aux);          // adiciona na fila de prontos de novo
+        }
+    }
+
+    if (s->queue_sem == NULL)                   // se a lsita estiver vazia é pq deu certo!
+        return 0;
+    else
+        return -1;
+    // isso aqui ta no pdf na explicação dessa função:
+    // Importante: as tarefas que estavam suspensas aguardando o semáforo devem ser acordadas e
+    // retornar da operação Down correspondente com um código de erro (valor de retorno -1).
+    // eu não entendi nada
+
 }

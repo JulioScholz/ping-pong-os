@@ -1,0 +1,1 @@
+/usr/bin/cc -g  -Wl,--enable-auto-import CMakeFiles/p10.dir/pingpong.c.o CMakeFiles/p10.dir/pingpong-racecond.c.o CMakeFiles/p10.dir/pingpong-semaphore.c.o CMakeFiles/p10.dir/queue.c.o  -o p10.exe -Wl,--out-implib,libp10.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
