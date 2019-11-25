@@ -545,16 +545,12 @@ int sem_down (semaphore_t *s){
     // acredito que para retornar, temos que verificar se o semáforo ainda está válido (não foi destruído)
     // não sei muito bem como fazer isso ainda
     if (s != NULL) {
+        s->count_sem--;
         if (s->count_sem < 0) {              // se o contador do semáforo for negativo
             task_current->state = SUSPENDED;
-            task_suspend(task_current, &queue_sleep);            // a tarefa atual é suspensa
-            queue_append((queue_t **) &(s->queue_sem),
-                         (queue_t *) task_current);       // e adicionada ao fim da fila do semáforo
-            task_switch(task_dispacther);               // a execução volta ao dispatcher
-        } else {
-            printf("Decrementa semáforo");
-            s->count_sem--;
-            return 0;
+            task_suspend(task_current, &(s->queue_sem));            // a tarefa atual é suspensa
+               // e adicionada ao fim da fila do semáforo
+           // task_switch(task_dispacther);               // a execução volta ao dispatcher
         }
     } else {
         printf("Semaforo vazio na sem_down");
@@ -568,9 +564,7 @@ int sem_up (semaphore_t *s) {
     if (s != NULL) {
         if (s->queue_sem != NULL) {      // se existir tarefa na fila do semáforo, ela deve ser acordada
             task_resume((task_t *) s->queue_sem);             // acorda a coitada
-            queue_remove((queue_t**)s->queue_sem, (queue_t*)task_current);              // remove da fila do semáforo
-            queue_append((queue_t **) &queue_ready,
-                         (queue_t *) s->queue_sem);          // adiciona na fila de prontos de novo
+                    // adiciona na fila de prontos de novo
         }
         else if (s->queue_sem == NULL){
             s->count_sem++;                                     // não entendi muito bem porque isso precisa ser feito
@@ -593,8 +587,9 @@ int sem_destroy (semaphore_t *s){
         task_t* aux = 0;
         while (s->queue_sem != NULL) {
             aux = (task_t *) s->queue_sem->next;
-            queue_remove((queue_t **) s->queue_sem, (queue_t *) aux);              // remove da fila do semáforo
-            queue_append((queue_t **) &queue_ready, (queue_t *) aux);          // adiciona na fila de prontos de novo
+            task_resume(aux);
+            //queue_remove((queue_t **) s->queue_sem, (queue_t *) aux);              // remove da fila do semáforo
+            //queue_append((queue_t **) &queue_ready, (queue_t *) aux);          // adiciona na fila de prontos de novo
         }
     }
 
