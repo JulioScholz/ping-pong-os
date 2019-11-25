@@ -58,7 +58,7 @@ typedef struct task_t
 typedef struct
 {
     int count_sem;
-    struct queue_t* queue_sem;
+    struct task_t* queue_sem;
 
   // preencher quando necessário
 } semaphore_t ;

@@ -200,7 +200,7 @@ void task_exit (int exitCode) {
             exitCodeReturned = exitCode;
             task_current->exitCode = exitCode;
             task_current->isDone = 1;
-            task_resume(task_current->ptr_queue_suspended);
+            task_resume((task_t*)task_current->ptr_queue_suspended);
         }
     }
 
@@ -502,7 +502,7 @@ int task_join (task_t *task) {
 #ifdef DEBUG
     printf ("task_join: A suspensão irá ocorrer \n");
 #endif
-    task_suspend(task_current, &(task->ptr_queue_suspended));
+    task_suspend(task_current, (task_t**)(&(task->ptr_queue_suspended)));
 
 #ifdef DEBUG
     printf ("task_join: voltando da suspensão (exit_code = %d)\n", task_current->exitCode);
@@ -544,18 +544,18 @@ int sem_down (semaphore_t *s){
 
     // acredito que para retornar, temos que verificar se o semáforo ainda está válido (não foi destruído)
     // não sei muito bem como fazer isso ainda
-    if (s != NULL) {
-        s->count_sem--;
-        if (s->count_sem < 0) {              // se o contador do semáforo for negativo
-            task_current->state = SUSPENDED;
-            task_suspend(task_current, &(s->queue_sem));            // a tarefa atual é suspensa
-               // e adicionada ao fim da fila do semáforo
-           // task_switch(task_dispacther);               // a execução volta ao dispatcher
-        }
-    } else {
-        printf("Semaforo vazio na sem_down");
+    if (s == NULL) {
+      printf("Semaforo vazio na sem_down");
         return -1;
     }
+    s->count_sem--;
+    if (s->count_sem < 0) {              // se o contador do semáforo for negativo
+        task_current->state = SUSPENDED;
+        task_suspend(task_current, &(s->queue_sem));            // a tarefa atual é suspensa
+            // e adicionada ao fim da fila do semáforo
+        // task_switch(task_dispacther);               // a execução volta ao dispatcher
+    }
+    return 0;
 }
 
 // libera o semáforo
