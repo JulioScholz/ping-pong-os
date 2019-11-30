@@ -1,9 +1,8 @@
 /*
 Alunos: Júlio César Werner Scholz - 2023890
         Juliana Rodrigues Viscenheski - 1508873
-Data de inicio: 03/09/2019
+Data de inicio: 30/11/2019
 Data de término 26/09/2019
-p10 - início 24/11/2019
 */
 #include "pingpong.h"
 
@@ -18,8 +17,9 @@ unsigned int delta = 0;
 unsigned int timeInit = 0;
 unsigned int timeLast = 0;
 unsigned int count_task = 0;
-
+unsigned int count_barrier = 1;
 int exitCodeReturned;
+int  block_yield = 0;
 
 void dispatcher_body(void* arg);
 task_t* scheduler();
@@ -184,8 +184,8 @@ void task_exit (int exitCode) {
     /* Tarefa sendo encerrada ... */
     /* Mostrar dados finais da tarefa */
     task_current->execution = systime() - task_current->execution;
-    printf ("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", task_current->t_id,
-            task_current->execution, task_current->processor, task_current->act);
+    //printf ("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", task_current->t_id,
+         //   task_current->execution, task_current->processor, task_current->act);
 
 
 #ifdef DEBUG
@@ -365,17 +365,17 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
 // libera o processador para a próxima tarefa, retornando à fila de tarefas
 // prontas ("ready queue")
 void task_yield () {
-
+   
     if (task_current->t_id != 1) {
         queue_append((queue_t**)&queue_ready, (queue_t*)(task_current));
         task_current->ptr_queue =(queue_t**) (&queue_ready);
-        // task_current->state = READY;
-#ifdef DEBUG
+        #ifdef DEBUG
         printf("task_yield: Task %d foi adicionada a fila de prontos\n", task_current->t_id);
-#endif
+        #endif
     }
     // Dispatcher assume o controle
     task_switch(task_dispacther);
+    
 }
 
 void signal_handler(int singnum) {
@@ -393,7 +393,9 @@ void signal_handler(int singnum) {
             task_current->act++;
             // o tempo de processador será o tempo total (delta corrido) menos o momento no qual a última tarefa foi finalizada
             task_current->processor += systime() - timeLast;
+            if(block_yield == 0){
             task_yield();
+            }
         }
         else {
             quantum--;
@@ -516,9 +518,9 @@ void task_sleep (int t){
     //o tempo de dormência estipulado deve ser maior que 0
     if (t >= 1) {
         task_current->state = SLEEP;
-#ifdef DEBUG
+        #ifdef DEBUG
         printf ("task_sleep: Tarefa %d irá dormir por %d seg\n",task_current->t_id,t);
-#endif
+        #endif
         task_current->time_sleep = (int)(systime() + t*1000) ;   // tempo de dormência definido
         // adiciona a fila de tarefas adormecidas
         task_suspend(task_current,&queue_sleep);
@@ -569,12 +571,12 @@ int sem_up (semaphore_t *s) {
         else if (s->queue_sem == NULL){
             s->count_sem++;                                     // não entendi muito bem porque isso precisa ser feito
         } else
-            printf("Fila do semaforo ta vazia na sem-up");
+            printf("sem-up: Fila do semaforo vazia");
 
         return 0;
 
     } else {
-        printf("Semaforo ta vazio na função sem_up");
+        printf("sem_up: Semaforo nulo!");
         return -1;
     }
 }
@@ -586,10 +588,8 @@ int sem_destroy (semaphore_t *s){
         if (s->queue_sem != NULL){}
         task_t* aux = 0;
         while (s->queue_sem != NULL) {
-            aux = (task_t *) s->queue_sem->next;
+            aux = (task_t *) s->queue_sem;
             task_resume(aux);
-            //queue_remove((queue_t **) s->queue_sem, (queue_t *) aux);              // remove da fila do semáforo
-            //queue_append((queue_t **) &queue_ready, (queue_t *) aux);          // adiciona na fila de prontos de novo
         }
     }
 
@@ -602,4 +602,84 @@ int sem_destroy (semaphore_t *s){
     // retornar da operação Down correspondente com um código de erro (valor de retorno -1).
     // eu não entendi nada
 
+}
+
+
+// Inicializa uma barreira
+int barrier_create (barrier_t *b, int N){
+    #ifdef DEBUG
+    printf ("barrier_create: Criando barreira %d\n",count_barrier);
+    #endif
+    if(b == NULL){
+        #ifdef DEBUG
+        printf ("Erron on barrier_create: barreira nula\n");
+        #endif
+        return -1;
+    }
+    if( N <= 0 ){
+        #ifdef DEBUG
+        printf ("Erron on barrier_create: Tamanho N inválido!\n");
+        #endif
+        return -1;
+    }
+
+    b->barrier_id  = count_barrier;
+    b->barrier_size = 0;
+    b->barrier_N = N;
+    b->queue_barrier = 0;
+    count_barrier++;
+
+    #ifdef DEBUG
+    printf ("barrier_create: Barreira %d criada com sucesso\n", b->barrier_id);
+    #endif
+
+    return 0;
+}
+
+// Chega a uma barreira
+int barrier_join (barrier_t *b){
+
+    if(b == NULL){
+        return -1;
+    }
+    
+    b->barrier_size++;
+    if(b->barrier_size >= b->barrier_N){
+       
+        //chegou ao limite, libera todas as tarefas na fila da barreira
+        while(b->queue_barrier){
+            
+            #ifdef DEBUG
+            printf ("barrier_join: liberando tarefa %d da barreira %d\n",aux->prev->t_id,b->barrier_id);
+            #endif
+            task_resume(b->queue_barrier);
+        }
+        
+        b->barrier_size = 0;
+
+    }
+    else{
+        #ifdef DEBUG
+        printf ("barrier_join: colocando tarefa %d na barreira %d\n",task_current->t_id,b->barrier_id);
+        #endif
+       
+        task_suspend(task_current,&(b->queue_barrier));
+        
+    }
+
+    return 0;
+}
+
+// Destrói uma barreira
+int barrier_destroy (barrier_t *b){
+
+	if (!b ) {
+		return -1;
+	}
+	
+	while (b->queue_barrier) {
+		task_resume(b->queue_barrier);
+	}
+    b = NULL;
+	return 0;
 }
