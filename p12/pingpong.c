@@ -184,8 +184,8 @@ void task_exit (int exitCode) {
     /* Tarefa sendo encerrada ... */
     /* Mostrar dados finais da tarefa */
     task_current->execution = systime() - task_current->execution;
-    //printf ("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", task_current->t_id,
-         //   task_current->execution, task_current->processor, task_current->act);
+    printf ("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", task_current->t_id,
+           task_current->execution, task_current->processor, task_current->act);
 
 
 #ifdef DEBUG
@@ -565,6 +565,7 @@ int sem_up (semaphore_t *s) {
 
     if (s != NULL) {
         if (s->queue_sem != NULL) {      // se existir tarefa na fila do semáforo, ela deve ser acordada
+        s->count_sem ++;
             task_resume((task_t *) s->queue_sem);             // acorda a coitada
                     // adiciona na fila de prontos de novo
         }
@@ -650,7 +651,7 @@ int barrier_join (barrier_t *b){
         while(b->queue_barrier){
             
             #ifdef DEBUG
-            printf ("barrier_join: liberando tarefa %d da barreira %d\n",aux->prev->t_id,b->barrier_id);
+            printf ("barrier_join: liberando tarefa %d da barreira %d\n",b->queue_barrier->t_id,b->barrier_id);
             #endif
             task_resume(b->queue_barrier);
         }
@@ -696,9 +697,6 @@ int mqueue_create (mqueue_t *queue, int max, int size)
         return -1;
     }
 
-    queue->max_size = max;
-    queue->byte_size = size;
-    queue->num_msg = 0;
     if(!(queue->buffer = malloc (max*size))){
         #ifdef DEBUG
         printf("error on mqueue_create: alocação do buffer falhou!\n");
@@ -706,26 +704,69 @@ int mqueue_create (mqueue_t *queue, int max, int size)
         return -1;
     }
 
-    if(!sem_create(&queue->sem_buffer,1) || !sem_create(&queue->sem_prod,max) || !sem_create(&queue->sem_cons,0)){
+    if(sem_create(&queue->sem_buffer,1) == -1 || sem_create(&queue->sem_prod,max) == -1 || sem_create(&queue->sem_cons,0) == -1){
         #ifdef DEBUG
         printf("error on mqueue_create: criação dos semáforos!\n");
         #endif
-        return 1;
+        return -1;
     }
 
+    queue->max_size = max;
+    queue->byte_size = size;
+    queue->num_msg = 0;
     queue->state = ON;
+    queue->ini = 0;
+    queue->end = 0;
+
+    #ifdef DEBUG
+    printf("mqueue_create: Fila de msg criada!!\n");
+    #endif
+    
+
     return 0;
 }
 
 // envia uma mensagem para a fila
 int mqueue_send (mqueue_t *queue, void *msg)
 {
-    return 0;
+    if (queue != NULL && queue->state != OFF) {
+        sem_down (&queue->sem_prod);//Solicita uma vaga do produtor
+        sem_down(&queue->sem_buffer); //Solicita uso do buffer
+         if(queue->state == ON){
+        // 1 : local onde será copiada a fonte de data;
+        // 2 : Fonte de data;
+        // 3 : Numero de bytes a copiar;
+        memcpy (/*1*/queue->buffer + (queue->end) * (queue->byte_size ), /*2*/msg, /*3*/queue->byte_size);
+        //memcpy (queue->buffer + (queue->end)*(queue->bytesSize), msg, queue->byte_size);
+        queue->num_msg++;
+        queue->end = (queue->end +1) %  queue->max_size;
+         }
+        sem_up (&queue->sem_buffer); //Libera o buffer 
+        sem_up (&queue->sem_cons); //Libera uma vaga dos consumidores
+        return 0;
+    }
+    return -1;
+
 }
 // recebe uma mensagem da fila
 int mqueue_recv (mqueue_t *queue, void *msg)
 {
-    return 0;
+       if (queue != NULL && queue->state != OFF) {
+        sem_down (&queue->sem_cons);//Solicita uma vaga dos consumidores
+        sem_down (&queue->sem_buffer);//Solicita o acesso ao buffer
+        if(queue->state == ON){
+            
+        memcpy (msg, queue->buffer +( queue->ini) * (queue->byte_size), queue->byte_size);
+        queue->num_msg--;
+        queue->ini = (queue->ini + 1) % queue->max_size;
+
+        }
+        sem_up (&queue->sem_buffer); // libera o buffer
+        sem_up (&queue->sem_prod); //libera uma vaga nos produtores
+        return 0;
+    }
+    return -1;
+
 }
 
 // destroi a fila, liberando as tarefas bloqueadas
@@ -769,7 +810,6 @@ int mqueue_msgs (mqueue_t *queue)
         #endif
         return -1;
     }
-
     
     return queue->num_msg;
 }

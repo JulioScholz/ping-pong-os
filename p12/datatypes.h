@@ -26,6 +26,7 @@
 #include <ucontext.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <string.h>
 
 // Estrutura que define uma tarefa
 typedef struct task_t
@@ -82,6 +83,8 @@ typedef struct
   unsigned int barrier_N;
   // Fila de barreiras
   struct task_t* queue_barrier;
+
+ 
 } barrier_t ;
 
 // estrutura que define uma fila de mensagens
@@ -90,6 +93,8 @@ typedef struct
   unsigned int max_size;
   unsigned int byte_size;
   unsigned int num_msg;
+  int ini;
+  int end;
   short int state;
   void* buffer;
 
