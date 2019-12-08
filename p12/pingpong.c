@@ -1,8 +1,8 @@
 /*
 Alunos: Júlio César Werner Scholz - 2023890
         Juliana Rodrigues Viscenheski - 1508873
-Data de inicio: 30/11/2019
-Data de término 26/09/2019
+Data de inicio: 06/12/2019
+Data de término 08/12/2019
 */
 #include "pingpong.h"
 
@@ -311,9 +311,9 @@ void dispatcher_body (void *arg) // dispatcher é uma tarefa
             // e acorda todas as tarefas que já podem ser acordadas
             if (systime() >= (unsigned int)task_aux->time_sleep){
 
-#ifdef DEBUG
+            #ifdef DEBUG
                 printf("dispatcher_body: Tarefa %d sendo acordada\n",task_aux->t_id);
-#endif
+            #endif
 
                 task_resume(task_aux);
 
@@ -486,24 +486,24 @@ unsigned int systime (){
 int task_join (task_t *task) {
     if (task == NULL || task_current == NULL)
     {
-#ifdef DEBUG
+    #ifdef DEBUG
         printf ("task_join: nao foi possivel dar join alguma task é nula\n");
-#endif
+    #endif
         return -1;
     }
     if( task->state == FINALIZED){
         return task->exitCode;
     }
-#ifdef DEBUG
+    #ifdef DEBUG
     printf ("task_join: tarefa %d dando join na tarefa %d\n", task_current->t_id, task->t_id);
-#endif
+    #endif
     // Tarefa perde o processador
     // E é colocada na fila de suspensas da tarefa passada
     // O dispatcher assume o controle na chamada de task suspend
     // E essa tarefa aguarda receber o processamento novamente
-#ifdef DEBUG
+    #ifdef DEBUG
     printf ("task_join: A suspensão irá ocorrer \n");
-#endif
+    #endif
     task_suspend(task_current, (task_t**)(&(task->ptr_queue_suspended)));
 
 #ifdef DEBUG
@@ -545,7 +545,6 @@ int sem_create (semaphore_t *s, int value){
 int sem_down (semaphore_t *s){
 
     // acredito que para retornar, temos que verificar se o semáforo ainda está válido (não foi destruído)
-    // não sei muito bem como fazer isso ainda
     if (s == NULL) {
       printf("Semaforo vazio na sem_down");
         return -1;
@@ -554,8 +553,7 @@ int sem_down (semaphore_t *s){
     if (s->count_sem < 0) {              // se o contador do semáforo for negativo
         task_current->state = SUSPENDED;
         task_suspend(task_current, &(s->queue_sem));            // a tarefa atual é suspensa
-            // e adicionada ao fim da fila do semáforo
-        // task_switch(task_dispacther);               // a execução volta ao dispatcher
+                                      // e adicionada ao fim da fila do semáforo
     }
     return 0;
 }
@@ -565,14 +563,13 @@ int sem_up (semaphore_t *s) {
 
     if (s != NULL) {
         if (s->queue_sem != NULL) {      // se existir tarefa na fila do semáforo, ela deve ser acordada
-        s->count_sem ++;
-            task_resume((task_t *) s->queue_sem);             // acorda a coitada
-                    // adiciona na fila de prontos de novo
+            s->count_sem ++;
+            task_resume((task_t *) s->queue_sem);          // adiciona na fila de prontos de novo
         }
-        else if (s->queue_sem == NULL){
-            s->count_sem++;                                     // não entendi muito bem porque isso precisa ser feito
-        } else
-            printf("sem-up: Fila do semaforo vazia");
+        else 
+        {
+            s->count_sem++;     // Não tem ninguem fila, o contador é incrementado
+        } 
 
         return 0;
 
@@ -593,15 +590,10 @@ int sem_destroy (semaphore_t *s){
             task_resume(aux);
         }
     }
-
     if (s->queue_sem == NULL)                   // se a lsita estiver vazia é pq deu certo!
         return 0;
     else
         return -1;
-    // isso aqui ta no pdf na explicação dessa função:
-    // Importante: as tarefas que estavam suspensas aguardando o semáforo devem ser acordadas e
-    // retornar da operação Down correspondente com um código de erro (valor de retorno -1).
-    // eu não entendi nada
 
 }
 
@@ -704,13 +696,15 @@ int mqueue_create (mqueue_t *queue, int max, int size)
         return -1;
     }
 
-    if(sem_create(&queue->sem_buffer,1) == -1 || sem_create(&queue->sem_prod,max) == -1 || sem_create(&queue->sem_cons,0) == -1){
+    if(sem_create(&queue->sem_buffer,1) == -1 ||
+       sem_create(&queue->sem_prod,max) == -1 ||
+       sem_create(&queue->sem_cons,0) == -1)
+    {
         #ifdef DEBUG
         printf("error on mqueue_create: criação dos semáforos!\n");
         #endif
         return -1;
     }
-
     queue->max_size = max;
     queue->byte_size = size;
     queue->num_msg = 0;
@@ -730,17 +724,19 @@ int mqueue_create (mqueue_t *queue, int max, int size)
 int mqueue_send (mqueue_t *queue, void *msg)
 {
     if (queue != NULL && queue->state != OFF) {
-        sem_down (&queue->sem_prod);//Solicita uma vaga do produtor
+
+        sem_down (&queue->sem_prod); //Solicita uma vaga do produtor
         sem_down(&queue->sem_buffer); //Solicita uso do buffer
          if(queue->state == ON){
         // 1 : local onde será copiada a fonte de data;
         // 2 : Fonte de data;
         // 3 : Numero de bytes a copiar;
+        
         memcpy (/*1*/queue->buffer + (queue->end) * (queue->byte_size ), /*2*/msg, /*3*/queue->byte_size);
         //memcpy (queue->buffer + (queue->end)*(queue->bytesSize), msg, queue->byte_size);
         queue->num_msg++;
         queue->end = (queue->end +1) %  queue->max_size;
-         }
+        }
         sem_up (&queue->sem_buffer); //Libera o buffer 
         sem_up (&queue->sem_cons); //Libera uma vaga dos consumidores
         return 0;
@@ -754,19 +750,17 @@ int mqueue_recv (mqueue_t *queue, void *msg)
        if (queue != NULL && queue->state != OFF) {
         sem_down (&queue->sem_cons);//Solicita uma vaga dos consumidores
         sem_down (&queue->sem_buffer);//Solicita o acesso ao buffer
-        if(queue->state == ON){
+    
             
-        memcpy (msg, queue->buffer +( queue->ini) * (queue->byte_size), queue->byte_size);
+        memcpy (msg, queue->buffer +(queue->ini) * (queue->byte_size), queue->byte_size);
         queue->num_msg--;
         queue->ini = (queue->ini + 1) % queue->max_size;
-
-        }
+        
         sem_up (&queue->sem_buffer); // libera o buffer
         sem_up (&queue->sem_prod); //libera uma vaga nos produtores
         return 0;
     }
     return -1;
-
 }
 
 // destroi a fila, liberando as tarefas bloqueadas
@@ -810,6 +804,5 @@ int mqueue_msgs (mqueue_t *queue)
         #endif
         return -1;
     }
-    
     return queue->num_msg;
 }
